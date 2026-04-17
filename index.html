@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pei-Hsun Peng — Product & Design Portfolio</title>
+<meta name="description" content="Portfolio of Pei-Hsun Peng (彭培勛) — Product Developer, UI/UX Designer, and Multimedia Creator based in Taichung, Taiwan." />
+<meta name="author" content="Pei-Hsun Peng" />
+<meta property="og:title" content="Pei-Hsun Peng — Portfolio" />
+<meta property="og:description" content="Cross-functional product and design work — apps, exhibitions, illustration, branding and video." />
+<meta property="og:type" content="website" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+/* ============= RESET & BASE ============= */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{overflow-x:hidden;max-width:100vw}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+body{
+  font-family:'Inter','Noto Sans TC',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  background:#050509;
+  color:#e8e8f0;
+  line-height:1.6;
+}
+:lang(zh) body, body.lang-zh{font-family:'Noto Sans TC','Inter',sans-serif}
+img,video{max-width:100%;display:block}
+a{color:inherit;text-decoration:none;transition:color .2s ease}
+button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
+
+/* ============= BACKGROUND FX ============= */
+.bg-fx{
+  position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(1200px 800px at 10% -10%,rgba(99,102,241,.15),transparent 60%),
+    radial-gradient(1000px 700px at 90% 10%,rgba(236,72,153,.12),transparent 60%),
+    radial-gradient(800px 600px at 50% 100%,rgba(34,211,238,.1),transparent 60%),
+    #050509;
+}
+.bg-grid{
+  position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);
+  background-size:64px 64px;
+  mask-image:radial-gradient(ellipse at center,black 30%,transparent 80%);
+  -webkit-mask-image:radial-gradient(ellipse at center,black 30%,transparent 80%);
+}
+
+/* ============= LAYOUT ============= */
+.container{width:100%;max-width:1240px;margin:0 auto;padding:0 28px}
+@media(max-width:640px){.container{padding:0 20px}}
+section{overflow-x:clip}
+
+/* ============= HEADER ============= */
+header{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:18px 0;
+  transition:all .3s ease;
+  backdrop-filter:blur(0px);
+}
+header.scrolled{
+  background:rgba(5,5,9,.72);
+  backdrop-filter:blur(20px) saturate(180%);
+  -webkit-backdrop-filter:blur(20px) saturate(180%);
+  border-bottom:1px solid rgba(255,255,255,.06);
+  padding:14px 0;
+}
+.nav{display:flex;align-items:center;justify-content:space-between}
+.logo{
+  font-family:'Space Grotesk',sans-serif;
+  font-weight:700;font-size:18px;letter-spacing:-.01em;
+  display:flex;align-items:center;gap:10px;
+}
+.logo-mark{
+  width:28px;height:28px;border-radius:8px;
+  background:linear-gradient(135deg,#6366f1 0%,#ec4899 50%,#22d3ee 100%);
+  display:grid;place-items:center;color:#050509;font-weight:800;
+  box-shadow:0 8px 24px -8px rgba(99,102,241,.7);
+}
+.nav-links{display:flex;align-items:center;gap:32px;font-size:14px;font-weight:500}
+.nav-links a{color:#b4b4c7;position:relative}
+.nav-links a:hover{color:#fff}
+.nav-links a::after{
+  content:'';position:absolute;bottom:-6px;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,#6366f1,#ec4899);
+  transform:scaleX(0);transform-origin:left;transition:transform .3s ease;
+}
+.nav-links a:hover::after{transform:scaleX(1)}
+.lang-toggle{
+  display:flex;align-items:center;gap:0;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:999px;padding:3px;font-size:13px;font-weight:600;
+}
+.lang-toggle button{
+  padding:6px 14px;border-radius:999px;color:#8b8ba5;transition:all .2s ease;
+}
+.lang-toggle button.active{
+  background:linear-gradient(135deg,#6366f1,#ec4899);
+  color:#fff;box-shadow:0 4px 12px -4px rgba(99,102,241,.6);
+}
+@media(max-width:760px){
+  .nav-links{display:none}
+}
+
+/* ============= HERO ============= */
+.hero{
+  min-height:100vh;display:flex;align-items:center;
+  padding:140px 0 80px;position:relative;
+}
+.hero-tag{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 14px;border-radius:999px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.03);
+  font-size:13px;color:#a5a5c0;font-weight:500;
+  margin-bottom:28px;
+}
+.hero-tag .dot{
+  width:6px;height:6px;border-radius:50%;background:#22c55e;
+  box-shadow:0 0 12px #22c55e;animation:pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.hero h1{
+  font-family:'Space Grotesk','Noto Sans TC',sans-serif;
+  font-size:clamp(34px,7vw,96px);
+  font-weight:700;line-height:1.05;letter-spacing:-.03em;
+  margin-bottom:28px;
+  overflow-wrap:break-word;
+  word-wrap:break-word;
+}
+@media(max-width:480px){
+  .hero h1{font-size:30px;letter-spacing:-.015em;line-height:1.1}
+  .hero h1 br{display:block}
+  .hero{padding:120px 0 60px}
+  .container{padding:0 20px}
+}
+.hero h1 .gradient{
+  background:linear-gradient(120deg,#6366f1 0%,#ec4899 45%,#22d3ee 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.hero-sub{
+  font-size:clamp(17px,1.8vw,22px);
+  color:#a5a5c0;max-width:620px;line-height:1.55;margin-bottom:40px;
+}
+.hero-cta{display:flex;gap:14px;flex-wrap:wrap}
+.btn{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:14px 24px;border-radius:12px;font-weight:600;font-size:15px;
+  transition:all .25s ease;cursor:pointer;
+}
+.btn-primary{
+  background:#ffffff;color:#050509;
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 32px -8px rgba(255,255,255,.3)}
+.btn-ghost{
+  background:rgba(255,255,255,.05);color:#fff;
+  border:1px solid rgba(255,255,255,.12);
+}
+.btn-ghost:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.25)}
+.btn svg{width:16px;height:16px}
+.hero-meta{
+  display:flex;gap:36px;margin-top:60px;flex-wrap:wrap;
+  padding-top:32px;border-top:1px solid rgba(255,255,255,.08);
+}
+.meta-item{display:flex;flex-direction:column;gap:4px}
+.meta-label{font-size:12px;color:#6b6b8a;text-transform:uppercase;letter-spacing:.1em;font-weight:600}
+.meta-value{font-size:15px;color:#e8e8f0;font-weight:500}
+
+/* ============= SECTIONS ============= */
+section{padding:120px 0;position:relative}
+@media(max-width:760px){section{padding:80px 0}}
+.section-head{margin-bottom:56px;max-width:780px}
+.section-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+  color:#6366f1;margin-bottom:16px;
+}
+.section-eyebrow::before{
+  content:'';width:24px;height:1px;background:#6366f1;
+}
+.section-title{
+  font-family:'Space Grotesk','Noto Sans TC',sans-serif;
+  font-size:clamp(32px,4.2vw,56px);font-weight:700;
+  letter-spacing:-.02em;line-height:1.1;margin-bottom:20px;
+}
+.section-desc{font-size:17px;color:#a5a5c0;line-height:1.65}
+
+/* ============= ABOUT ============= */
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start}
+@media(max-width:860px){.about-grid{grid-template-columns:1fr;gap:40px}}
+.about-text p{color:#c8c8dc;font-size:17px;margin-bottom:20px;line-height:1.75}
+.skills-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:24px}
+@media(max-width:520px){.skills-grid{grid-template-columns:1fr}}
+.skill-card{
+  padding:20px;border-radius:14px;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.08);
+  transition:all .3s ease;
+}
+.skill-card:hover{
+  background:rgba(255,255,255,.06);
+  border-color:rgba(99,102,241,.3);
+  transform:translateY(-2px);
+}
+.skill-card h4{
+  font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:#ec4899;margin-bottom:10px;
+}
+.skill-card p{font-size:14px;color:#c8c8dc;line-height:1.55}
+
+/* ============= TIMELINE ============= */
+.timeline{margin-top:8px}
+.timeline-item{
+  display:grid;grid-template-columns:120px 1fr;gap:28px;
+  padding:28px 0;border-bottom:1px solid rgba(255,255,255,.06);
+}
+@media(max-width:520px){
+  .timeline-item{grid-template-columns:1fr;gap:8px}
+}
+.timeline-year{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:14px;font-weight:600;color:#6b6b8a;letter-spacing:.04em;
+}
+.timeline-role{font-size:18px;font-weight:600;margin-bottom:6px;color:#fff}
+.timeline-company{font-size:14px;color:#8b8ba5;margin-bottom:14px}
+.timeline-desc{font-size:15px;color:#b4b4c7;line-height:1.65}
+
+/* ============= WORKS ============= */
+.works-grid{
+  display:grid;grid-template-columns:repeat(12,1fr);gap:24px;
+}
+@media(max-width:900px){.works-grid{grid-template-columns:repeat(6,1fr);gap:20px}}
+@media(max-width:560px){.works-grid{grid-template-columns:1fr;gap:16px}}
+
+.work-card{
+  position:relative;overflow:hidden;border-radius:20px;
+  background:#0c0c18;border:1px solid rgba(255,255,255,.06);
+  cursor:pointer;transition:all .4s cubic-bezier(.4,0,.2,1);
+  display:flex;flex-direction:column;
+}
+.work-card:hover{
+  transform:translateY(-4px);
+  border-color:rgba(255,255,255,.14);
+  box-shadow:0 30px 60px -20px rgba(0,0,0,.6);
+}
+.work-card .media{
+  position:relative;overflow:hidden;aspect-ratio:16/10;
+  background:#0a0a15;
+}
+.work-card .media img,
+.work-card .media video{
+  width:100%;height:100%;object-fit:cover;
+  transition:transform .6s cubic-bezier(.4,0,.2,1);
+}
+.work-card:hover .media img{transform:scale(1.04)}
+.work-card .play-badge{
+  position:absolute;inset:0;display:grid;place-items:center;
+  background:linear-gradient(0deg,rgba(5,5,9,.6),transparent 50%);
+  opacity:0;transition:opacity .3s ease;
+}
+.work-card:hover .play-badge{opacity:1}
+.play-icon{
+  width:64px;height:64px;border-radius:50%;
+  background:rgba(255,255,255,.95);color:#050509;
+  display:grid;place-items:center;
+  backdrop-filter:blur(10px);
+  box-shadow:0 8px 32px rgba(0,0,0,.4);
+}
+.play-icon svg{width:22px;height:22px;margin-left:3px}
+.work-card .info{padding:22px 24px 26px}
+.work-card .tag{
+  display:inline-block;font-size:11px;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;
+  color:#22d3ee;margin-bottom:8px;
+}
+.work-card h3{
+  font-family:'Space Grotesk','Noto Sans TC',sans-serif;
+  font-size:20px;font-weight:600;letter-spacing:-.01em;
+  line-height:1.3;margin-bottom:6px;color:#fff;
+}
+.work-card .desc{font-size:14px;color:#8b8ba5;line-height:1.5}
+
+/* Grid sizes */
+.span-12{grid-column:span 12}
+.span-8{grid-column:span 8}
+.span-6{grid-column:span 6}
+.span-4{grid-column:span 4}
+@media(max-width:900px){
+  .span-12,.span-8,.span-6,.span-4{grid-column:span 6}
+}
+@media(max-width:560px){
+  .span-12,.span-8,.span-6,.span-4{grid-column:span 1}
+}
+
+/* Featured card (taller) */
+.work-card.featured .media{aspect-ratio:16/9}
+
+/* ============= VIDEO MODAL ============= */
+.modal{
+  position:fixed;inset:0;z-index:200;
+  background:rgba(5,5,9,.88);backdrop-filter:blur(16px);
+  display:none;align-items:center;justify-content:center;
+  padding:40px 20px;animation:fadeIn .25s ease;
+}
+.modal.open{display:flex}
+.modal-body{
+  position:relative;max-width:1200px;width:100%;max-height:90vh;
+  border-radius:16px;overflow:hidden;
+  background:#000;
+  box-shadow:0 40px 80px -20px rgba(0,0,0,.8);
+}
+.modal-body video{
+  width:100%;height:auto;max-height:90vh;display:block;
+}
+.modal-close{
+  position:absolute;top:-48px;right:0;
+  width:40px;height:40px;border-radius:50%;
+  background:rgba(255,255,255,.1);color:#fff;
+  display:grid;place-items:center;
+  transition:background .2s ease;
+}
+.modal-close:hover{background:rgba(255,255,255,.2)}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* ============= CONTACT ============= */
+.contact-box{
+  padding:64px 48px;border-radius:24px;
+  background:
+    radial-gradient(800px 400px at 50% 0%,rgba(99,102,241,.15),transparent 70%),
+    linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.01));
+  border:1px solid rgba(255,255,255,.08);
+  text-align:center;
+}
+@media(max-width:640px){.contact-box{padding:48px 28px}}
+.contact-box h2{
+  font-family:'Space Grotesk','Noto Sans TC',sans-serif;
+  font-size:clamp(32px,5vw,56px);font-weight:700;
+  letter-spacing:-.02em;line-height:1.1;margin-bottom:20px;
+}
+.contact-box h2 .gradient{
+  background:linear-gradient(120deg,#6366f1,#ec4899);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.contact-box p{font-size:17px;color:#a5a5c0;margin-bottom:32px;max-width:500px;margin-left:auto;margin-right:auto}
+.contact-ctas{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+
+/* ============= FOOTER ============= */
+footer{
+  padding:48px 0 40px;
+  border-top:1px solid rgba(255,255,255,.06);
+  color:#6b6b8a;font-size:13px;
+}
+.footer-inner{
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;
+}
+
+/* ============= REVEAL ANIMATIONS ============= */
+.reveal{opacity:0;transform:translateY(24px);transition:all .8s cubic-bezier(.2,.8,.2,1)}
+.reveal.in-view{opacity:1;transform:none}
+
+/* ============= LANG VISIBILITY ============= */
+[data-en],[data-zh]{display:none}
+body.lang-en [data-en]{display:revert}
+body.lang-zh [data-zh]{display:revert}
+/* keep inline for spans */
+body.lang-en span[data-en]{display:inline}
+body.lang-zh span[data-zh]{display:inline}
+
+/* ============= MARQUEE ============= */
+.marquee{
+  margin:40px -28px 0;overflow:hidden;max-width:calc(100% + 56px);
+  border-top:1px solid rgba(255,255,255,.06);
+  border-bottom:1px solid rgba(255,255,255,.06);
+  padding:28px 0;
+  -webkit-mask-image:linear-gradient(90deg,transparent,black 10%,black 90%,transparent);
+  mask-image:linear-gradient(90deg,transparent,black 10%,black 90%,transparent);
+}
+.marquee-track{
+  display:flex;gap:64px;
+  animation:scroll 40s linear infinite;
+  white-space:nowrap;
+}
+.marquee-track span{
+  font-family:'Space Grotesk','Noto Sans TC',sans-serif;
+  font-size:28px;font-weight:600;letter-spacing:-.01em;color:#3a3a55;
+}
+.marquee-track span.accent{
+  background:linear-gradient(120deg,#6366f1,#ec4899);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+@keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+</style>
+</head>
+<body class="lang-en">
+
+<div class="bg-fx"></div>
+<div class="bg-grid"></div>
+
+<!-- ======= HEADER ======= -->
+<header id="header">
+  <div class="container nav">
+    <a href="#top" class="logo">
+      <div class="logo-mark">P</div>
+      <span>Pei-Hsun Peng</span>
+    </a>
+    <nav class="nav-links">
+      <a href="#work"><span data-en>Work</span><span data-zh>作品</span></a>
+      <a href="#about"><span data-en>About</span><span data-zh>關於</span></a>
+      <a href="#experience"><span data-en>Experience</span><span data-zh>經歷</span></a>
+      <a href="#contact"><span data-en>Contact</span><span data-zh>聯絡</span></a>
+    </nav>
+    <div class="lang-toggle" role="group" aria-label="Language toggle">
+      <button class="active" data-lang="en">EN</button>
+      <button data-lang="zh">中</button>
+    </div>
+  </div>
+</header>
+
+<!-- ======= HERO ======= -->
+<section class="hero" id="top">
+  <div class="container">
+    <div class="hero-tag reveal">
+      <span class="dot"></span>
+      <span data-en>Available for new opportunities</span>
+      <span data-zh>開放新合作機會</span>
+    </div>
+    <h1 class="reveal">
+      <span data-en>Building products that<br/>connect <span class="gradient">design &amp; system.</span></span>
+      <span data-zh>打造連結<br/><span class="gradient">設計與系統</span>的產品。</span>
+    </h1>
+    <p class="hero-sub reveal">
+      <span data-en>Hi, I'm Pei-Hsun Peng — a cross-functional project executor spanning procurement operations, marketing, UI/UX design and digital product development. Based in Taichung, Taiwan.</span>
+      <span data-zh>你好，我是彭培勛，一位橫跨採購運營、行銷統籌、UI/UX 設計與數位產品開發的跨職能專案執行者。現居台中，持續以系統化思維驅動每一次交付。</span>
+    </p>
+    <div class="hero-cta reveal">
+      <a href="#work" class="btn btn-primary">
+        <span data-en>View work</span><span data-zh>瀏覽作品</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+      </a>
+      <a href="assets/docs/Pei-Hsun_Peng_Resume.pdf" target="_blank" class="btn btn-ghost">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+        <span data-en>Resume (PDF)</span><span data-zh>下載履歷</span>
+      </a>
+    </div>
+
+    <div class="hero-meta reveal">
+      <div class="meta-item">
+        <div class="meta-label"><span data-en>Location</span><span data-zh>所在地</span></div>
+        <div class="meta-value"><span data-en>Taichung, Taiwan</span><span data-zh>台灣．台中</span></div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label"><span data-en>Focus</span><span data-zh>專長</span></div>
+        <div class="meta-value"><span data-en>Product · UI/UX · Multimedia</span><span data-zh>產品 · UI/UX · 影音</span></div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label"><span data-en>Studying</span><span data-zh>目前就讀</span></div>
+        <div class="meta-value"><span data-en>M.S. Digital Innovation · Tunghai</span><span data-zh>東海大學 數位創新碩士</span></div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Email</div>
+        <div class="meta-value"><a href="mailto:thetompeng@gmail.com">thetompeng@gmail.com</a></div>
+      </div>
+    </div>
+
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee-track">
+        <span>Product Development</span><span class="accent">· UI / UX Design</span>
+        <span>Exhibition Design</span><span class="accent">· Illustration</span>
+        <span>Video Editing</span><span class="accent">· Branding</span>
+        <span>Catalog Design</span><span class="accent">· Vibe Coding</span>
+        <span>Product Development</span><span class="accent">· UI / UX Design</span>
+        <span>Exhibition Design</span><span class="accent">· Illustration</span>
+        <span>Video Editing</span><span class="accent">· Branding</span>
+        <span>Catalog Design</span><span class="accent">· Vibe Coding</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======= ABOUT ======= -->
+<section id="about">
+  <div class="container">
+    <div class="about-grid reveal">
+      <div>
+        <div class="section-eyebrow"><span data-en>About</span><span data-zh>關於我</span></div>
+        <h2 class="section-title">
+          <span data-en>Systematic thinking, <br/>end-to-end delivery.</span>
+          <span data-zh>以系統化思維，<br/>獨立交付每個階段。</span>
+        </h2>
+        <div class="about-text">
+          <p>
+            <span data-en>I work at the intersection of operations, design, and product. Across procurement, marketing, and digital product roles, I've learned to clarify messy requirements, coordinate cross-functional teams, and turn concepts into shipped products.</span>
+            <span data-zh>我在運營、設計與產品的交界處工作。從採購、行銷到數位產品開發，我習慣在混亂的需求中釐清脈絡、協調跨部門團隊，並把概念落地成可交付的產品。</span>
+          </p>
+          <p>
+            <span data-en>Recently I independently led and published a digital exhibition app — using AI prompt-driven development (Vibe Coding), Firebase, and the Gemini API — achieving end-to-end delivery from a no-code background.</span>
+            <span data-zh>近期獨立主導並上線線上數位展覽 App，透過 AI 提示語協作開發（Vibe Coding）、Firebase 與 Gemini API 整合，成功以無程式背景完成端到端產品交付。</span>
+          </p>
+        </div>
+      </div>
+      <div>
+        <div class="skills-grid">
+          <div class="skill-card">
+            <h4><span data-en>PM &amp; Planning</span><span data-zh>專案企劃</span></h4>
+            <p><span data-en>Vendor Management · Requirements Definition · UI/UX Logic Planning (Figma) · Cross-Functional Coordination</span><span data-zh>委外廠商管理・系統需求定義・UI/UX 邏輯規劃（Figma）・跨部門專案協調</span></p>
+          </div>
+          <div class="skill-card">
+            <h4><span data-en>Tech &amp; Tools</span><span data-zh>技術工具</span></h4>
+            <p><span data-en>AI Prompt Engineering (Vibe Coding) · Firebase · Gemini API · Oracle ERP</span><span data-zh>AI 提示工程（Vibe Coding）・Firebase 後端整合・Gemini API 應用・Oracle ERP</span></p>
+          </div>
+          <div class="skill-card">
+            <h4><span data-en>Multimedia</span><span data-zh>視覺多媒體</span></h4>
+            <p><span data-en>Commercial Video Editing (CapCut) · Graphic &amp; Illustration (Adobe CC, Procreate) · AI Generative Tools</span><span data-zh>商業影音剪輯（CapCut）・平面與插畫設計（Adobe CC, Procreate）・AI 生成工具</span></p>
+          </div>
+          <div class="skill-card">
+            <h4><span data-en>Operations</span><span data-zh>營運管理</span></h4>
+            <p><span data-en>Data Accuracy Control · Large-scale Material Data · Real-time Cross-dept Sync</span><span data-zh>資料準確度控管・大規模物料資料・跨部門即時同步</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======= WORK ======= -->
+<section id="work">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="section-eyebrow"><span data-en>Selected Work</span><span data-zh>精選作品</span></div>
+      <h2 class="section-title">
+        <span data-en>Product, design, and things in between.</span>
+        <span data-zh>產品、設計，以及介於兩者之間的作品。</span>
+      </h2>
+      <p class="section-desc">
+        <span data-en>A selection of apps, exhibitions, illustrations, and branded collateral I've shipped across academic, commercial, and personal projects.</span>
+        <span data-zh>精選自學術、商業與個人作品中的 App、展場設計、插畫與品牌物——每一件都是從概念到交付的完整紀錄。</span>
+      </p>
+    </div>
+
+    <!-- ===== DIGITAL PRODUCTS / APPS ===== -->
+    <div class="reveal" style="margin-bottom:40px">
+      <h3 style="font-family:'Space Grotesk','Noto Sans TC',sans-serif;font-size:22px;font-weight:600;color:#fff;margin-bottom:8px;">
+        <span data-en>01 · Digital Products &amp; Apps</span><span data-zh>01 · 數位產品與 App</span>
+      </h3>
+      <p style="color:#8b8ba5;font-size:15px;max-width:680px">
+        <span data-en>From UI/UX concepts to a fully launched AI-assisted digital exhibition app.</span>
+        <span data-zh>從 UI/UX 概念，到完整上線的 AI 協作數位展覽 App。</span>
+      </p>
+    </div>
+
+    <div class="works-grid">
+      <div class="work-card featured span-8 reveal" data-video="assets/videos/app-gallery.mp4">
+        <div class="media">
+          <img src="assets/images/poster-app-gallery.jpg" alt="Gallery — Digital Online Gallery" loading="lazy" />
+          <div class="play-badge"><div class="play-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div></div>
+        </div>
+        <div class="info">
+          <span class="tag"><span data-en>Graduation Project · Full-Stack</span><span data-zh>畢業專題 · 全端</span></span>
+          <h3><span data-en>Gallery — Digital Online Exhibition</span><span data-zh>Gallery — 數位線上畫廊</span></h3>
+          <p class="desc"><span data-en>Independently led and published. Five virtual scenes, Firebase backend, Gemini API-driven interactivity. Built with AI prompt-driven development.</span><span data-zh>獨立主導並發布上線。五大虛擬場景、Firebase 後端、Gemini API 驅動互動，透過 AI 提示語協作開發。</span></p>
+        </div>
+      </div>
+
+      <div class="work-card span-4 reveal" data-video="assets/videos/app-ar-furniture.mp4">
+        <div class="media">
+          <img src="assets/images/poster-app-ar-furniture.jpg" alt="AR Furniture Shopping App" loading="lazy" />
+          <div class="play-badge"><div class="play-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div></div>
+        </div>
+        <div class="info">
+          <span class="tag"><span data-en>UI/UX · AR</span><span data-zh>UI/UX · AR</span></span>
+          <h3><span data-en>AR Furniture Shopping</span><span data-zh>AR 傢俱選購</span></h3>
+          <p class="desc"><span data-en>Concept app exploring AR try-before-you-buy for home furniture.</span><span data-zh>以 AR 在家預覽家具的概念型 App 設計。</span></p>
+        </div>
+      </div>
+
+      <div class="work-card span-4 reveal" data-video="assets/videos/app-tinderfood.mp4">
+        <div class="media">
+          <img src="assets/images/poster-app-tinderfood.jpg" alt="Tinder Food App" loading="lazy" />
+          <div class="play-badge"><div class="play-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div></div>
+        </div>
+        <div class="info">
+          <span class="tag"><span data-en>UI/UX · Consumer</span><span data-zh>UI/UX · 消費應用</span></span>
+          <h3><span data-en>Tinder Food</span><span data-zh>Tinder Food</span></h3>
+          <p class="desc"><span data-en>Swipe-to-discover food app concept. Playful micro-interactions.</span><span data-zh>以滑動探索餐點的美食 App 概念，強調微互動體驗。</span></p>
+        </div>
+      </div>
+
+      <div class="work-card span-4 reveal" data-video="assets/videos/app-7leaders-booth.mp4">
+        <div class="media">
+          <img src="assets/images/poster-app-7leaders-booth.jpg" alt="7Leaders Interactive Booth App" loading="lazy" />
+          <div class="play-badge"><div class="play-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div></div>
+        </div>
+        <div class="info">
+          <span class="tag"><span data-en>Commercial · Exhibition Tech</span><span data-zh>商業 · 展場科技</span></span>
+          <h3><span data-en>7Leaders Interactive Booth</span><span data-zh>七駿科技互動式展台</span></h3>
+          <p class="desc"><span data-en>Mobile exhibition app. Led UI specs in Figma and coordinated external dev vendor into commercial delivery.</span><span data-zh>行動展場互動 App。以 Figma 制定介面規格、對接外部開發廠商，成功轉化為商用產品。</span></p>
+        </div>
+      </div>
+
+      <div class="work-card span-4 reveal" data-video="assets/videos/arduino-3dprint.mp4">
+        <div class="media">
+          <img src="assets/images/poster-arduino-3dprint.jpg" alt="Arduino + 3D Modeling & Printing" loading="lazy" />
+          <div class="play-badge"><div class="play-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div></div>
+        </div>
+        <div class="info">
+          <span class="tag"><span data-en>Prototyping · Hardware</span><span data-zh>原型 · 硬體</span></span>
+          <h3><span data-en>Arduino + 3D Printing</span><span data-zh>Arduino + 3D 建模與列印</span></h3>
+          <p class="desc"><span data-en>Physical prototyping workflow, from CAD to print to microcontroller.</span><span data-zh>從 CAD 到 3D 列印到微控制器的實體原型製作流程。</span></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== EXHIBITION ===== -->
+    <div class="reveal" style="margin:96px 0 40px">
+      <h3 style="font-family:'Space Grotesk','Noto Sans TC',sans-serif;font-size:22px;font-weight:600;color:#fff;margin-bottom:8px;">
+        <span data-en>02 · Exhibition Design</span><span data-zh>02 · 展場設計</span>
+      </h3>
+      <p style="color:#8b8ba5;font-size:15px;max-width:680px">
+        <span data-en>Booth concepts for 7Leaders — themed around the dramatic scale of precision cutting tools.</span>
+        <span data-zh>為七駿科技設計的展場概念——將精密切削刀具的震撼尺度，轉化為敘事性場域。</span>
+      </p>
+    </div>
+
+    <div class="works-grid">
+      <div class="work-card span-4 reveal" data-image="assets/images/exhibition-taichung.jpg">
+        <div class="media"><img src="assets/images/exhibition-taichung.jpg" alt="Taichung Exhibition" loading="lazy" /></div>
+        <div class="info">
+          <span class="tag"><span data-en>Taichung · Concept</span><span data-zh>台中展・主視覺</span></span>
+          <h3><span data-en>Knife Handle · End-Mill War Vehicle</span><span data-zh>刀柄立銑刀戰車</span></h3>
+          <p class="desc"><span data-en>Combining cutting tools with a war-vehicle motif in signature red &amp; pearl white.</span><span data-zh>將刀柄與立銑刀與戰車做結合，搭配公司主視覺設調紅白灰。</span></p>
+        </div>
+      </div>
+      <div class="work-card span-4 reveal" data-image="assets/images/exhibition-taipei.jpg">
+        <div class="media"><img src="assets/images/exhibition-taipei.jpg" alt="Taipei Exhibition" loading="lazy" /></div>
+        <div class="info">
+          <span class="tag"><span data-en>Taipei · Concept</span><span data-zh>台北展・主視覺</span></span>
+          <h3><span data-en>Explosion End-Mill</span><span data-zh>炸裂立銑刀</span></h3>
+          <p class="desc"><span data-en>Frozen moment of machining — splinters radiating outward for maximum visual impact.</span><span data-zh>切削瞬間的爆發感——碎屑從立銑刀向外射散，營造強烈視覺張力。</span></p>
+        </div>
+      </div>
+      <div class="work-card span-4 reveal" data-image="assets/images/exhibition-tainan.jpg">
+        <div class="media"><img src="assets/images/exhibition-tainan.jpg" alt="Tainan Exhibition" loading="lazy" /></div>
+        <div class="info">
+          <span class="tag"><span data-en>Tainan · Concept</span><span data-zh>台南展・主視覺</span></span>
+          <h3><span data-en>UFO Invasion</span><span data-zh>幽浮入侵</span></h3>
+          <p class="desc"><span data-en>A flying-saucer narrative pairs cutting tools with galactic invaders from a distant planet.</span><span data-zh>以幽浮自遙遠星球入侵地球的敘事，將刀柄與立銑刀轉化為幽浮意象。</span></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CATALOG / GRAPHIC ===== -->
+    <div class="reveal" style="margin:96px 0 40px">
+      <h3 style="font-family:'Space Grotesk','Noto Sans TC',sans-serif;font-size:22px;font-weight:600;color:#fff;margin-bottom:8px;">
+        <span data-en>03 · Catalog &amp; Advertising</span><span data-zh>03 · 型錄與廣告設計</span>
+      </h3>
+      <p style="color:#8b8ba5;font-size:15px;max-width:680px">
+        <span data-en>Editorial systems and ad collateral — from minimalist tool catalogs to product campaigns.</span>
+        <span data-zh>從極簡的工具型錄到產品行銷廣告，以編輯式思維建構資訊系統。</span>
+      </p>
+    </div>
+
+    <div class="works-grid">
+      <div class="work-card span-6 reveal" data-image="assets/images/catalog-modern.jpg">
+        <div class="media"><img src="assets/images/catalog-modern.jpg" alt="Modern Catalog Design" loading="lazy" /></div>
+        <div class="info">
+          <span class="tag"><span data-en>Catalog · Editorial</span><span data-zh>型錄 · 編輯設計</span></span>
+          <h3><span data-en>Modern Minimal Catalog</span><span data-zh>摩登極簡型錄</span></h3>
+          <p class="desc"><span data-en>A clean editorial system for a regional end-mill catalog — ANSI / DIN / ASIA series.</span><span data-zh>為 ANSI / DIN / 亞洲系列立銑刀設計的編輯系統，強調乾淨的資訊排版。</span></p>
+        </div>
+      </div>
+      <div class="work-card span-6 reveal" data-image="assets/images/advertising-posters.jpg">
+        <div class="media"><img src="assets/images/advertising-posters.jpg" alt="Advertising Posters" loading="lazy" /></div>
+        <div class="info">
+          <span class="tag"><span data-en>Advertising · Print</span><span data-zh>廣告 · 印刷</span></span>
+          <h3><span data-en>7Leaders Ad Campaigns</span><span data-zh>七駿科技廣告系列</span></h3>
+          <p class="desc"><span data-en>Print ads for trade journals &amp; outdoor — ranging from modern-minimal to American sci-fi.</span><span data-zh>工商時報、戶外媒體與長久廣告——從摩登極簡到美式科幻的多樣風格。</span></p>
+        </div>
+      </div>
+      <div class="work-card span-8 reveal" data-image="assets/images/app-e234sx.jpg">
+        <div class="media"><img src="assets/images/app-e234sx.jpg" alt="E234SX Product Microsite" loading="lazy" /></div>
+        <div class="info">
+          <span class="tag"><span data-en>Product · UI</span><span data-zh>產品 · 介面</span></span>
+          <h3><span data-en>E234SX · Stainless End-Mill UI</span><span data-zh>E234SX · 不鏽鋼立銑刀介面</span></h3>
+          <p class="desc"><span data-en>Product showcase UI for an industrial cutting tool — bilingual spec layout with motion accents.</span><span data-zh>為工業刀具設計的產品展示介面，雙語規格排版並加入動態重點。</span></p>
+        </div>
+      </div>
+      <div class="work-card span-4 reveal" data-image="assets/images/branding-apparel.jpg">
+        <div class="media"><img src="assets/images/branding-apparel.jpg" alt="Branding & Apparel" loading="lazy" /></div>
+        <div class="info">
+          <span class="tag"><span data-en>Branding · Apparel</span><span data-zh>品牌 · 服飾</span></span>
+          <h3><span data-en>Brand Collateral</span><span data-zh>品牌周邊物料</span></h3>
+          <p class="desc"><span data-en>Logos, business cards, uniforms, wall signage and banners for 7Leaders.</span><span data-zh>為七駿科技設計的 Logo、名片、工作服、看板與布條系統。</span></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== ILLUSTRATION ===== -->
+    <div class="reveal" style="margin:96px 0 40px">
+      <h3 style="font-family:'Space Grotesk','Noto Sans TC',sans-serif;font-size:22px;font-weight:600;color:#fff;margin-bottom:8px;">
+        <span data-en>04 · Illustration &amp; Characters</span><span data-zh>04 · 插畫與角色設計</span>
+      </h3>
+      <p style="color:#8b8ba5;font-size:15px;max-width:680px">
+        <span data-en>Personal IP universe &quot;Rxunn&quot; plus commissioned comic-style covers. Drawn in Procreate on iPad.</span>
+        <span data-zh>個人 IP 宇宙「Rxunn」系列與多件美式漫畫風格約稿。以 Procreate 於 iPad 繪製。</span>
+      </p>
+    </div>
+
+    <div class="works-grid">
+      <div class="work-card span-6 reveal" data-image="assets/images/rxunn-trio.jpg">
+        <div class="media"><img src="assets/images/rxunn-trio.jpg" alt="Rxunn Character Trio" loading="lazy" /></div>
+        <div class="info">
+          <span class="tag"><span data-en>Personal IP · Characters</span><span data-zh>個人 IP · 角色</span></span>
+          <h3><span data-en>Rxunn Universe</span><span data-zh>Rxunn 宇宙</span></h3>
+          <p class="desc"><span data-en>Three characters — Cool-wo, Fa-rabbit, and Pyrokid — inhabit this original illustration world.</span><span data-zh>目前三個角色：酷喔、法兔、火寶，共同構成 Rxunn 的原創插畫宇宙。</span></p>
+        </div>
+      </div>
+      <div class="work-card span-6 reveal" data-image="assets/images/illustration-7leaders.jpg">
+        <div class="media"><img src="assets/images/illustration-7leaders.jpg" alt="7Leaders Illustration Collection" loading="lazy" /></div>
+        <div class="info">
+          <span class="tag"><span data-en>Commercial · Illustration</span><span data-zh>商業 · 插畫</span></span>
+          <h3><span data-en>7Leaders Illustration Series</span><span data-zh>七駿科技插畫系列</span></h3>
+          <p class="desc"><span data-en>Product campaigns rendered in American comic-book style for social &amp; trade channels.</span><span data-zh>以美式漫畫風格繪製的產品行銷插畫，用於社群與展場物料。</span></p>
+        </div>
+      </div>
+      <div class="work-card span-4 reveal" data-image="assets/images/rxunn-coolwo.jpg">
+        <div class="media"><img src="assets/images/rxunn-coolwo.jpg" alt="Cool-wo" loading="lazy" /></div>
+        <div class="info">
+          <span class="tag">Rxunn · 01</span>
+          <h3><span data-en>Cool-wo</span><span data-zh>酷喔</span></h3>
+          <p class="desc"><span data-en>Street-style prototype with oversized sneakers and a pulled-down beanie.</span><span data-zh>戴著拉下的毛帽與誇張鞋款的街頭風格原型角色。</span></p>
+        </div>
+      </div>
+      <div class="work-card span-4 reveal" data-image="assets/images/rxunn-farabbit.jpg">
+        <div class="media"><img src="assets/images/rxunn-farabbit.jpg" alt="Fa-rabbit" loading="lazy" /></div>
+        <div class="info">
+          <span class="tag">Rxunn · 02</span>
+          <h3><span data-en>Fa-rabbit</span><span data-zh>法兔</span></h3>
+          <p class="desc"><span data-en>A rabbit born from a thought of drawing something slightly older and stranger.</span><span data-zh>想畫一隻帶點倦意又有些陌生感的兔子，就有了法兔。</span></p>
+        </div>
+      </div>
+      <div class="work-card span-4 reveal" data-image="assets/images/rxunn-pyrokid.jpg">
+        <div class="media"><img src="assets/images/rxunn-pyrokid.jpg" alt="Pyrokid" loading="lazy" /></div>
+        <div class="info">
+          <span class="tag">Rxunn · 03</span>
+          <h3><span data-en>Pyrokid</span><span data-zh>火寶</span></h3>
+          <p class="desc"><span data-en>Pixel-styled alien with an 8-bit soul — the spark of the Rxunn universe.</span><span data-zh>以像素風繪製的外星人角色，是 Rxunn 宇宙的火種。</span></p>
+        </div>
+      </div>
+
+      <div class="work-card span-4 reveal" data-image="assets/images/illust-other-1.jpg">
+        <div class="media"><img src="assets/images/illust-other-1.jpg" alt="Commissioned Covers" loading="lazy" /></div>
+        <div class="info">
+          <span class="tag"><span data-en>Commissioned · Covers</span><span data-zh>委託 · 封面</span></span>
+          <h3><span data-en>Comic Covers · Series 1</span><span data-zh>漫畫封面・系列一</span></h3>
+        </div>
+      </div>
+      <div class="work-card span-4 reveal" data-image="assets/images/illust-other-2.jpg">
+        <div class="media"><img src="assets/images/illust-other-2.jpg" alt="Commissioned Covers" loading="lazy" /></div>
+        <div class="info">
+          <span class="tag"><span data-en>Commissioned · Covers</span><span data-zh>委託 · 封面</span></span>
+          <h3><span data-en>Comic Covers · Series 2</span><span data-zh>漫畫封面・系列二</span></h3>
+        </div>
+      </div>
+      <div class="work-card span-4 reveal" data-image="assets/images/illust-other-3.jpg">
+        <div class="media"><img src="assets/images/illust-other-3.jpg" alt="Commissioned Covers" loading="lazy" /></div>
+        <div class="info">
+          <span class="tag"><span data-en>Commissioned · Covers</span><span data-zh>委託 · 封面</span></span>
+          <h3><span data-en>Comic Covers · Series 3</span><span data-zh>漫畫封面・系列三</span></h3>
+        </div>
+      </div>
+      <div class="work-card span-6 reveal" data-image="assets/images/illust-other-4.jpg">
+        <div class="media"><img src="assets/images/illust-other-4.jpg" alt="Street Illustration" loading="lazy" /></div>
+        <div class="info">
+          <span class="tag"><span data-en>Editorial · Illustration</span><span data-zh>編輯 · 插畫</span></span>
+          <h3><span data-en>Street Scenes</span><span data-zh>街景插畫</span></h3>
+        </div>
+      </div>
+      <div class="work-card span-6 reveal" data-image="assets/images/illust-other-5.jpg">
+        <div class="media"><img src="assets/images/illust-other-5.jpg" alt="Character Portrait" loading="lazy" /></div>
+        <div class="info">
+          <span class="tag"><span data-en>Character · Portrait</span><span data-zh>角色 · 肖像</span></span>
+          <h3><span data-en>Character Illustration</span><span data-zh>角色肖像插畫</span></h3>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== VIDEO EDITING ===== -->
+    <div class="reveal" style="margin:96px 0 40px">
+      <h3 style="font-family:'Space Grotesk','Noto Sans TC',sans-serif;font-size:22px;font-weight:600;color:#fff;margin-bottom:8px;">
+        <span data-en>05 · Video Editing</span><span data-zh>05 · 影片剪輯</span>
+      </h3>
+      <p style="color:#8b8ba5;font-size:15px;max-width:680px">
+        <span data-en>Brand promotional reels and exhibition clips for 7Leaders, edited in CapCut. Drove ~90% conversion on cold-outreach campaigns.</span>
+        <span data-zh>為七駿科技剪輯的品牌宣傳與展場影片，使用 CapCut 製作，陌生客戶開發轉換率約達 90%。</span>
+      </p>
+    </div>
+
+    <div class="works-grid">
+      <a class="work-card span-12 reveal" href="https://www.instagram.com/7_leaders_corp/" target="_blank" rel="noopener">
+        <div class="media" style="aspect-ratio:21/9;background:linear-gradient(135deg,#1a1a2e 0%,#0f0f1e 50%,#1a1a2e 100%);display:grid;place-items:center;">
+          <div style="text-align:center;padding:40px">
+            <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#f58529,#dd2a7b,#8134af,#515bd4);display:inline-grid;place-items:center;margin-bottom:20px">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="18" cy="6" r="1" fill="#fff"/></svg>
+            </div>
+            <h3 style="font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:600;color:#fff;margin-bottom:10px;">@7_leaders_corp</h3>
+            <p style="color:#a5a5c0;font-size:15px;max-width:520px;margin:0 auto">
+              <span data-en>All the brand reels I edited live on 7Leaders' Instagram. Click to view the full collection.</span>
+              <span data-zh>所有為前公司剪輯的影片都發佈於七駿科技 Instagram，點擊查看完整作品。</span>
+            </p>
+          </div>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ======= EXPERIENCE ======= -->
+<section id="experience">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="section-eyebrow"><span data-en>Experience</span><span data-zh>工作經歷</span></div>
+      <h2 class="section-title"><span data-en>Roles &amp; journey.</span><span data-zh>角色與歷程。</span></h2>
+    </div>
+
+    <div class="timeline reveal">
+      <div class="timeline-item">
+        <div class="timeline-year">2025 — <span data-en>Now</span><span data-zh>至今</span></div>
+        <div>
+          <div class="timeline-role"><span data-en>Graduate Researcher &amp; Product Developer</span><span data-zh>數位產品開發與研究員</span></div>
+          <div class="timeline-company"><span data-en>Tunghai University · M.S. in Digital Innovation</span><span data-zh>東海大學・數位創新碩士學位學程</span></div>
+          <div class="timeline-desc">
+            <span data-en>Independently led and published a digital exhibition app using AI prompt-driven development (Vibe Coding). Defined five virtual scene frameworks, integrated Firebase, and implemented Gemini API for interactivity and scalability.</span>
+            <span data-zh>獨立主導並發布線上數位展覽 App，透過 AI 提示語協作開發（Vibe Coding）。定義五大虛擬場景資訊架構、整合 Firebase 後端，並導入 Gemini API 提升互動與擴展性。</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-year">2023 — 2024</div>
+        <div>
+          <div class="timeline-role"><span data-en>Marketing Project &amp; UI Design Lead</span><span data-zh>行銷專案與介面設計統籌</span></div>
+          <div class="timeline-company"><span data-en>7Leaders Corp.</span><span data-zh>七駿科技股份有限公司</span></div>
+          <div class="timeline-desc">
+            <span data-en>Led a mobile exhibition interactive-app project; used Figma to define interface specs and coordinated with external dev vendors. Produced brand videos and exhibition visuals that drove ~90% new-client conversion.</span>
+            <span data-zh>主導行動展場互動 App 專案；以 Figma 制定介面規格並對接外部軟體開發公司。產出品牌宣傳影片與展場視覺素材，帶動約 90% 陌生客戶開發轉換率。</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-year">2022 — 2023</div>
+        <div>
+          <div class="timeline-role"><span data-en>NPI Administrator</span><span data-zh>NPI 採購助理</span></div>
+          <div class="timeline-company"><span data-en>Fox Factory</span><span data-zh>瑞士商弗克司股份有限公司</span></div>
+          <div class="timeline-desc">
+            <span data-en>Ran Oracle ERP operations for New Product Introduction — item registration, listing, and deletion. Supported 12 front-end procurement staff with 100% cross-departmental data accuracy in real time.</span>
+            <span data-zh>以 Oracle ERP 執行 NPI 料號建檔、上架與刪減。支援 12 位前端採購人員同步專案資訊，確保跨部門資料 100% 即時準確。</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======= CONTACT ======= -->
+<section id="contact">
+  <div class="container">
+    <div class="contact-box reveal">
+      <div class="section-eyebrow" style="justify-content:center;margin-left:auto;margin-right:auto">
+        <span data-en>Get in touch</span><span data-zh>聯絡我</span>
+      </div>
+      <h2>
+        <span data-en>Let's build something <span class="gradient">great</span> together.</span>
+        <span data-zh>一起打造<span class="gradient">有意義</span>的作品。</span>
+      </h2>
+      <p>
+        <span data-en>Looking for product, UI/UX, or multimedia support? I'm open to full-time roles and short-term collaborations.</span>
+        <span data-zh>正在尋找產品開發、UI/UX 設計或多媒體支援？我開放正職機會與短期合作，期待交流。</span>
+      </p>
+      <div class="contact-ctas">
+        <a href="mailto:thetompeng@gmail.com" class="btn btn-primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 7L2 7"/></svg>
+          thetompeng@gmail.com
+        </a>
+        <a href="tel:+886975763597" class="btn btn-ghost">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+          +886 975 763 597
+        </a>
+        <a href="assets/docs/Pei-Hsun_Peng_Resume.pdf" target="_blank" class="btn btn-ghost">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+          <span data-en>Resume</span><span data-zh>履歷</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======= FOOTER ======= -->
+<footer>
+  <div class="container footer-inner">
+    <div>© 2026 Pei-Hsun Peng · <span data-en>All rights reserved.</span><span data-zh>版權所有。</span></div>
+    <div>
+      <span data-en>Designed &amp; built with care.</span>
+      <span data-zh>用心打磨．一切從細節開始。</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ======= VIDEO MODAL ======= -->
+<div class="modal" id="videoModal" role="dialog" aria-modal="true">
+  <div class="modal-body">
+    <button class="modal-close" aria-label="Close">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+    <video id="modalVideo" controls playsinline></video>
+  </div>
+</div>
+
+<!-- ======= IMAGE LIGHTBOX ======= -->
+<div class="modal" id="imageModal" role="dialog" aria-modal="true">
+  <div class="modal-body" style="background:transparent;box-shadow:none">
+    <button class="modal-close" aria-label="Close">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+    <img id="modalImage" alt="" style="max-width:100%;max-height:90vh;border-radius:16px;display:block;margin:0 auto" />
+  </div>
+</div>
+
+<script>
+// ============ LANGUAGE TOGGLE ============
+const langBtns = document.querySelectorAll('.lang-toggle button');
+const body = document.body;
+const savedLang = localStorage.getItem('lang') || (navigator.language.startsWith('zh') ? 'zh' : 'en');
+setLang(savedLang);
+langBtns.forEach(b => b.addEventListener('click', () => setLang(b.dataset.lang)));
+function setLang(lang){
+  body.classList.remove('lang-en','lang-zh');
+  body.classList.add('lang-' + lang);
+  document.documentElement.lang = lang === 'zh' ? 'zh-Hant' : 'en';
+  langBtns.forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+  try{localStorage.setItem('lang', lang)}catch(e){}
+}
+
+// ============ HEADER SCROLL ============
+const header = document.getElementById('header');
+const onScroll = () => header.classList.toggle('scrolled', window.scrollY > 24);
+window.addEventListener('scroll', onScroll, {passive:true});
+onScroll();
+
+// ============ REVEAL ON SCROLL ============
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if(e.isIntersecting){
+      e.target.classList.add('in-view');
+      io.unobserve(e.target);
+    }
+  });
+}, {threshold:.12, rootMargin:'0px 0px -40px 0px'});
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+// ============ VIDEO / IMAGE MODAL ============
+const videoModal = document.getElementById('videoModal');
+const modalVideo = document.getElementById('modalVideo');
+const imageModal = document.getElementById('imageModal');
+const modalImage = document.getElementById('modalImage');
+
+document.querySelectorAll('.work-card').forEach(card => {
+  const videoSrc = card.dataset.video;
+  const imageSrc = card.dataset.image;
+  if(!videoSrc && !imageSrc) return;
+  card.addEventListener('click', (e) => {
+    if(e.target.closest('a')) return;
+    if(videoSrc){
+      modalVideo.src = videoSrc;
+      videoModal.classList.add('open');
+      modalVideo.play().catch(()=>{});
+    } else if(imageSrc){
+      modalImage.src = imageSrc;
+      imageModal.classList.add('open');
+    }
+  });
+});
+
+function closeModals(){
+  videoModal.classList.remove('open');
+  imageModal.classList.remove('open');
+  modalVideo.pause();
+  modalVideo.removeAttribute('src');
+  modalVideo.load();
+  modalImage.src = '';
+}
+document.querySelectorAll('.modal').forEach(m => {
+  m.addEventListener('click', (e) => { if(e.target === m) closeModals(); });
+});
+document.querySelectorAll('.modal-close').forEach(b => b.addEventListener('click', closeModals));
+document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeModals(); });
+</script>
+</body>
+</html>
