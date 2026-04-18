@@ -19,32 +19,62 @@ html,body{overflow-x:hidden;max-width:100vw}
 html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 body{
   font-family:'Inter','Noto Sans TC',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-  background:#050509;
-  color:#e8e8f0;
+  background:#030014;
+  color:#e8e8f5;
   line-height:1.6;
+  position:relative;
 }
 :lang(zh) body, body.lang-zh{font-family:'Noto Sans TC','Inter',sans-serif}
 img,video{max-width:100%;display:block}
 a{color:inherit;text-decoration:none;transition:color .2s ease}
 button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
 
-/* ============= BACKGROUND FX ============= */
-.bg-fx{
-  position:fixed;inset:0;z-index:-1;pointer-events:none;
+/* ============= COSMIC BACKGROUND ============= */
+.cosmos{
+  position:fixed;inset:0;z-index:-10;pointer-events:none;
   background:
-    radial-gradient(1200px 800px at 10% -10%,rgba(99,102,241,.15),transparent 60%),
-    radial-gradient(1000px 700px at 90% 10%,rgba(236,72,153,.12),transparent 60%),
-    radial-gradient(800px 600px at 50% 100%,rgba(34,211,238,.1),transparent 60%),
-    #050509;
+    radial-gradient(ellipse at 20% 10%,rgba(109,40,217,.45),transparent 55%),
+    radial-gradient(ellipse at 85% 20%,rgba(236,72,153,.25),transparent 50%),
+    radial-gradient(ellipse at 50% 75%,rgba(59,130,246,.32),transparent 60%),
+    radial-gradient(ellipse at 10% 95%,rgba(34,211,238,.18),transparent 55%),
+    linear-gradient(180deg,#030014 0%,#07011f 50%,#0a0226 100%);
+}
+.three-canvas{
+  position:fixed;inset:0;z-index:-8;pointer-events:none;
+  width:100%;height:100%;display:block;
 }
 .bg-grid{
-  position:fixed;inset:0;z-index:-1;pointer-events:none;
+  position:fixed;inset:0;z-index:-2;pointer-events:none;opacity:.22;
   background-image:
-    linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);
-  background-size:64px 64px;
-  mask-image:radial-gradient(ellipse at center,black 30%,transparent 80%);
-  -webkit-mask-image:radial-gradient(ellipse at center,black 30%,transparent 80%);
+    linear-gradient(rgba(139,92,246,.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(139,92,246,.05) 1px,transparent 1px);
+  background-size:72px 72px;
+  mask-image:radial-gradient(ellipse at center,black 15%,transparent 70%);
+  -webkit-mask-image:radial-gradient(ellipse at center,black 15%,transparent 70%);
+}
+.vignette{
+  position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(ellipse at center,transparent 30%,rgba(3,0,20,.55) 85%,rgba(3,0,20,.85) 100%);
+}
+/* Scroll progress indicator / hint */
+.scroll-hint{
+  position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;
+  color:rgba(192,132,252,.7);z-index:50;pointer-events:none;
+  transition:opacity .4s ease;
+}
+.scroll-hint.hide{opacity:0}
+.scroll-hint .line{
+  width:1px;height:40px;
+  background:linear-gradient(180deg,rgba(192,132,252,.6),transparent);
+  animation:scrollLine 2s ease-in-out infinite;
+  transform-origin:top;
+}
+@keyframes scrollLine{
+  0%{transform:scaleY(.2);opacity:0}
+  50%{transform:scaleY(1);opacity:1}
+  100%{transform:scaleY(.2);opacity:0;transform-origin:bottom}
 }
 
 /* ============= LAYOUT ============= */
@@ -106,7 +136,19 @@ header.scrolled{
 /* ============= HERO ============= */
 .hero{
   min-height:100vh;display:flex;align-items:center;
-  padding:140px 0 80px;position:relative;
+  padding:140px 0 80px;position:relative;overflow:visible;
+}
+.hero::before{
+  content:'';position:absolute;left:50%;top:35%;
+  width:900px;height:900px;max-width:95vw;max-height:95vw;
+  transform:translate(-50%,-50%);border-radius:50%;
+  background:radial-gradient(circle,rgba(139,92,246,.25),rgba(236,72,153,.1) 40%,transparent 70%);
+  filter:blur(60px);z-index:-1;pointer-events:none;
+  animation:haloPulse 8s ease-in-out infinite;
+}
+@keyframes haloPulse{
+  0%,100%{opacity:.8;transform:translate(-50%,-50%) scale(1)}
+  50%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}
 }
 .hero-tag{
   display:inline-flex;align-items:center;gap:8px;
@@ -136,8 +178,9 @@ header.scrolled{
   .container{padding:0 20px}
 }
 .hero h1 .gradient{
-  background:linear-gradient(120deg,#6366f1 0%,#ec4899 45%,#22d3ee 100%);
+  background:linear-gradient(120deg,#c084fc 0%,#ec4899 45%,#22d3ee 100%);
   -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 30px rgba(192,132,252,.45));
 }
 .hero-sub{
   font-size:clamp(17px,1.8vw,22px);
@@ -183,7 +226,10 @@ section{padding:120px 0;position:relative}
   font-family:'Space Grotesk','Noto Sans TC',sans-serif;
   font-size:clamp(32px,4.2vw,56px);font-weight:700;
   letter-spacing:-.02em;line-height:1.1;margin-bottom:20px;
+  text-shadow:0 0 40px rgba(139,92,246,.25);
 }
+.section-eyebrow{color:#c084fc!important}
+.section-eyebrow::before{background:linear-gradient(90deg,#c084fc,#ec4899)!important;width:32px!important}
 .section-desc{font-size:17px;color:#a5a5c0;line-height:1.65}
 
 /* ============= ABOUT ============= */
@@ -235,14 +281,28 @@ section{padding:120px 0;position:relative}
 
 .work-card{
   position:relative;overflow:hidden;border-radius:20px;
-  background:#0c0c18;border:1px solid rgba(255,255,255,.06);
+  background:linear-gradient(180deg,rgba(15,10,35,.85),rgba(6,4,22,.9));
+  border:1px solid rgba(139,92,246,.12);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
   cursor:pointer;transition:all .4s cubic-bezier(.4,0,.2,1);
   display:flex;flex-direction:column;
 }
+.work-card::before{
+  content:'';position:absolute;inset:-1px;border-radius:20px;padding:1px;
+  background:linear-gradient(135deg,rgba(192,132,252,0),rgba(236,72,153,0),rgba(34,211,238,0));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;
+  pointer-events:none;transition:background .4s ease;
+}
 .work-card:hover{
-  transform:translateY(-4px);
-  border-color:rgba(255,255,255,.14);
-  box-shadow:0 30px 60px -20px rgba(0,0,0,.6);
+  transform:translateY(-6px);
+  border-color:rgba(192,132,252,.35);
+  box-shadow:
+    0 30px 60px -20px rgba(0,0,0,.7),
+    0 0 48px -12px rgba(192,132,252,.35);
+}
+.work-card:hover::before{
+  background:linear-gradient(135deg,rgba(192,132,252,.8),rgba(236,72,153,.6),rgba(34,211,238,.7));
 }
 .work-card .media{
   position:relative;overflow:hidden;aspect-ratio:16/10;
@@ -325,22 +385,33 @@ section{padding:120px 0;position:relative}
 
 /* ============= CONTACT ============= */
 .contact-box{
-  padding:64px 48px;border-radius:24px;
+  padding:64px 48px;border-radius:24px;position:relative;overflow:hidden;
   background:
-    radial-gradient(800px 400px at 50% 0%,rgba(99,102,241,.15),transparent 70%),
-    linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.01));
-  border:1px solid rgba(255,255,255,.08);
+    radial-gradient(800px 400px at 50% 0%,rgba(139,92,246,.22),transparent 70%),
+    radial-gradient(600px 300px at 80% 100%,rgba(236,72,153,.18),transparent 70%),
+    linear-gradient(180deg,rgba(15,10,35,.6),rgba(6,4,22,.7));
+  border:1px solid rgba(192,132,252,.22);
   text-align:center;
+  box-shadow:0 0 80px -20px rgba(139,92,246,.4);
 }
+.contact-box::before{
+  content:'';position:absolute;top:-40%;left:-20%;width:140%;height:140%;
+  background:conic-gradient(from 0deg,transparent 0deg,rgba(192,132,252,.08) 60deg,transparent 120deg,rgba(236,72,153,.08) 240deg,transparent 300deg);
+  animation:contactSwirl 20s linear infinite;pointer-events:none;
+}
+@keyframes contactSwirl{to{transform:rotate(360deg)}}
 @media(max-width:640px){.contact-box{padding:48px 28px}}
 .contact-box h2{
   font-family:'Space Grotesk','Noto Sans TC',sans-serif;
   font-size:clamp(32px,5vw,56px);font-weight:700;
   letter-spacing:-.02em;line-height:1.1;margin-bottom:20px;
 }
+.contact-box h2{position:relative;z-index:1}
+.contact-box p, .contact-box .contact-ctas{position:relative;z-index:1}
 .contact-box h2 .gradient{
-  background:linear-gradient(120deg,#6366f1,#ec4899);
+  background:linear-gradient(120deg,#c084fc,#ec4899,#22d3ee);
   -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 20px rgba(192,132,252,.35));
 }
 .contact-box p{font-size:17px;color:#a5a5c0;margin-bottom:32px;max-width:500px;margin-left:auto;margin-right:auto}
 .contact-ctas{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
@@ -394,8 +465,15 @@ body.lang-zh span[data-zh]{display:inline}
 </head>
 <body class="lang-en">
 
-<div class="bg-fx"></div>
-<div class="bg-grid"></div>
+<div class="cosmos" aria-hidden="true"></div>
+<canvas class="three-canvas" id="threeCanvas" aria-hidden="true"></canvas>
+<div class="bg-grid" aria-hidden="true"></div>
+<div class="vignette" aria-hidden="true"></div>
+
+<div class="scroll-hint" id="scrollHint" aria-hidden="true">
+  <span data-en>Scroll to fly</span><span data-zh>滾動以飛行</span>
+  <div class="line"></div>
+</div>
 
 <header id="header">
   <div class="container nav">
@@ -913,6 +991,7 @@ body.lang-zh span[data-zh]{display:inline}
   </div>
 </div>
 
+<script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
 <script>
 // ============ LANGUAGE TOGGLE ============
 const langBtns = document.querySelectorAll('.lang-toggle button');
@@ -928,11 +1007,391 @@ function setLang(lang){
   try{localStorage.setItem('lang', lang)}catch(e){}
 }
 
-// ============ HEADER SCROLL ============
+// ============ HEADER SCROLL + SCROLL TRACKING ============
 const header = document.getElementById('header');
-const onScroll = () => header.classList.toggle('scrolled', window.scrollY > 24);
-window.addEventListener('scroll', onScroll, {passive:true});
-onScroll();
+const scrollHint = document.getElementById('scrollHint');
+let scrollY = window.scrollY;
+let ticking = false;
+function onScrollTick(){
+  header.classList.toggle('scrolled', scrollY > 24);
+  if(scrollHint) scrollHint.classList.toggle('hide', scrollY > 120);
+  ticking = false;
+}
+window.addEventListener('scroll', () => {
+  scrollY = window.scrollY;
+  if(!ticking){ requestAnimationFrame(onScrollTick); ticking = true; }
+}, {passive:true});
+onScrollTick();
+
+// ============ THREE.JS 3D COSMOS ============
+(function(){
+  if(typeof THREE === 'undefined') return;
+  const canvas = document.getElementById('threeCanvas');
+  if(!canvas) return;
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const isMobile = window.innerWidth < 720;
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile, alpha: true, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2));
+  renderer.setClearColor(0x000000, 0);
+
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x06021e, 0.00085);
+
+  const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.1, 4000);
+  camera.position.set(0, 0, 0);
+
+  function resize(){
+    const w = window.innerWidth, h = window.innerHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  resize();
+
+  // ---------- STAR FIELD (deep + near) ----------
+  function makeStarTexture(){
+    const size = 64;
+    const c = document.createElement('canvas');
+    c.width = c.height = size;
+    const g = c.getContext('2d');
+    const grad = g.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
+    grad.addColorStop(0, 'rgba(255,255,255,1)');
+    grad.addColorStop(0.2, 'rgba(255,255,255,0.9)');
+    grad.addColorStop(0.5, 'rgba(255,255,255,0.25)');
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, size, size);
+    const tex = new THREE.CanvasTexture(c);
+    tex.needsUpdate = true;
+    return tex;
+  }
+  const starTex = makeStarTexture();
+
+  function buildStars(count, radius, sizeRange, spread){
+    const geo = new THREE.BufferGeometry();
+    const pos = new Float32Array(count * 3);
+    const col = new Float32Array(count * 3);
+    const siz = new Float32Array(count);
+    for(let i = 0; i < count; i++){
+      // distribute in long cube so fly-through reveals more
+      const x = (Math.random() - 0.5) * spread;
+      const y = (Math.random() - 0.5) * spread * 0.7;
+      const z = -Math.random() * radius - 20;
+      pos[i*3] = x; pos[i*3+1] = y; pos[i*3+2] = z;
+      const c = Math.random();
+      if(c < 0.62){ col[i*3]=1; col[i*3+1]=1; col[i*3+2]=1; }
+      else if(c < 0.82){ col[i*3]=0.78; col[i*3+1]=0.55; col[i*3+2]=1; }
+      else if(c < 0.94){ col[i*3]=0.45; col[i*3+1]=0.88; col[i*3+2]=1; }
+      else { col[i*3]=1; col[i*3+1]=0.58; col[i*3+2]=0.82; }
+      siz[i] = sizeRange[0] + Math.random() * (sizeRange[1] - sizeRange[0]);
+    }
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    geo.setAttribute('size', new THREE.BufferAttribute(siz, 1));
+    const mat = new THREE.ShaderMaterial({
+      uniforms: { uTime: { value: 0 }, uTex: { value: starTex } },
+      vertexShader: `
+        attribute float size;
+        varying vec3 vColor;
+        varying float vSize;
+        uniform float uTime;
+        void main(){
+          vColor = color;
+          vSize = size;
+          vec4 mv = modelViewMatrix * vec4(position, 1.0);
+          float twinkle = 0.75 + 0.25 * sin(uTime * 1.6 + position.x * 0.4 + position.y * 0.3);
+          gl_PointSize = size * twinkle * (300.0 / max(-mv.z, 1.0));
+          gl_Position = projectionMatrix * mv;
+        }
+      `,
+      fragmentShader: `
+        uniform sampler2D uTex;
+        varying vec3 vColor;
+        varying float vSize;
+        void main(){
+          vec4 t = texture2D(uTex, gl_PointCoord);
+          if(t.a < 0.02) discard;
+          gl_FragColor = vec4(vColor, 1.0) * t;
+        }
+      `,
+      vertexColors: true,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
+    });
+    return new THREE.Points(geo, mat);
+  }
+
+  const nearStars = buildStars(isMobile ? 1800 : 3600, 1800, [6, 16], 1400);
+  const midStars = buildStars(isMobile ? 1400 : 2400, 2600, [3, 9], 2000);
+  const farStars = buildStars(isMobile ? 1200 : 2000, 3400, [1.2, 4], 2800);
+  scene.add(nearStars, midStars, farStars);
+
+  // ---------- NEBULA (billboard sprites) ----------
+  function makeNebulaTexture(color1, color2){
+    const size = 256;
+    const c = document.createElement('canvas');
+    c.width = c.height = size;
+    const g = c.getContext('2d');
+    const grad = g.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
+    grad.addColorStop(0, color1);
+    grad.addColorStop(0.4, color2);
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, size, size);
+    // add noise-like blobs
+    for(let i = 0; i < 24; i++){
+      const x = Math.random() * size, y = Math.random() * size;
+      const r = 20 + Math.random() * 50;
+      const sg = g.createRadialGradient(x, y, 0, x, y, r);
+      sg.addColorStop(0, color1);
+      sg.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = sg;
+      g.globalAlpha = 0.35;
+      g.beginPath(); g.arc(x, y, r, 0, Math.PI*2); g.fill();
+    }
+    g.globalAlpha = 1;
+    const tex = new THREE.CanvasTexture(c);
+    tex.needsUpdate = true;
+    return tex;
+  }
+  const nebulaDefs = [
+    { tex: makeNebulaTexture('rgba(192,132,252,0.85)', 'rgba(126,34,206,0.35)'), pos: [-140, 40, -380], scale: 600 },
+    { tex: makeNebulaTexture('rgba(244,114,182,0.8)', 'rgba(190,24,93,0.3)'), pos: [160, -60, -620], scale: 540 },
+    { tex: makeNebulaTexture('rgba(96,165,250,0.75)', 'rgba(30,64,175,0.3)'), pos: [-80, 70, -900], scale: 720 },
+    { tex: makeNebulaTexture('rgba(103,232,249,0.7)', 'rgba(14,116,144,0.3)'), pos: [120, -50, -1280], scale: 640 },
+    { tex: makeNebulaTexture('rgba(251,146,60,0.6)', 'rgba(194,65,12,0.25)'), pos: [-180, -80, -1600], scale: 520 }
+  ];
+  const nebulae = [];
+  nebulaDefs.forEach(def => {
+    const mat = new THREE.SpriteMaterial({ map: def.tex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.85 });
+    const sp = new THREE.Sprite(mat);
+    sp.position.set(def.pos[0], def.pos[1], def.pos[2]);
+    sp.scale.set(def.scale, def.scale, 1);
+    scene.add(sp);
+    nebulae.push(sp);
+  });
+
+  // ---------- PLANETS ----------
+  function makePlanetTexture(baseColor, accentColor){
+    const w = 512, h = 256;
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    const g = c.getContext('2d');
+    const grad = g.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, accentColor);
+    grad.addColorStop(0.5, baseColor);
+    grad.addColorStop(1, accentColor);
+    g.fillStyle = grad;
+    g.fillRect(0, 0, w, h);
+    for(let i = 0; i < 80; i++){
+      const x = Math.random() * w, y = Math.random() * h;
+      const r = 15 + Math.random() * 60;
+      g.globalAlpha = 0.08 + Math.random() * 0.18;
+      const sg = g.createRadialGradient(x, y, 0, x, y, r);
+      sg.addColorStop(0, accentColor);
+      sg.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = sg;
+      g.beginPath(); g.arc(x, y, r, 0, Math.PI*2); g.fill();
+    }
+    g.globalAlpha = 1;
+    const tex = new THREE.CanvasTexture(c);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    return tex;
+  }
+
+  const planets = [];
+  function addPlanet(opts){
+    const group = new THREE.Group();
+    const geo = new THREE.SphereGeometry(opts.radius, 48, 48);
+    const tex = makePlanetTexture(opts.baseColor, opts.accentColor);
+    const mat = new THREE.MeshStandardMaterial({
+      map: tex,
+      roughness: 0.85,
+      metalness: 0.1,
+      emissive: new THREE.Color(opts.emissive || opts.accentColor),
+      emissiveIntensity: 0.18
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.rotation.z = (Math.random() - 0.5) * 0.4;
+    group.add(mesh);
+
+    // atmosphere glow (backside sphere with additive material)
+    const glowGeo = new THREE.SphereGeometry(opts.radius * 1.22, 32, 32);
+    const glowMat = new THREE.ShaderMaterial({
+      uniforms: { uColor: { value: new THREE.Color(opts.glowColor || opts.baseColor) } },
+      vertexShader: `
+        varying vec3 vN; varying vec3 vP;
+        void main(){
+          vN = normalize(normalMatrix * normal);
+          vec4 mv = modelViewMatrix * vec4(position, 1.0);
+          vP = -normalize(mv.xyz);
+          gl_Position = projectionMatrix * mv;
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 uColor;
+        varying vec3 vN; varying vec3 vP;
+        void main(){
+          float rim = 1.0 - max(dot(vN, vP), 0.0);
+          rim = pow(rim, 2.3);
+          gl_FragColor = vec4(uColor * rim, rim * 0.9);
+        }
+      `,
+      transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.BackSide
+    });
+    const glow = new THREE.Mesh(glowGeo, glowMat);
+    group.add(glow);
+
+    if(opts.ring){
+      const ringGeo = new THREE.RingGeometry(opts.radius * 1.6, opts.radius * 2.5, 96);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: opts.ringColor || 0xa5f3fc,
+        side: THREE.DoubleSide,
+        transparent: true, opacity: 0.55,
+        blending: THREE.AdditiveBlending, depthWrite: false
+      });
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.rotation.x = Math.PI * 0.48;
+      ring.rotation.y = 0.2;
+      group.add(ring);
+    }
+
+    group.position.set(opts.pos[0], opts.pos[1], opts.pos[2]);
+    scene.add(group);
+    planets.push({ group, mesh, rotSpeed: opts.rotSpeed });
+  }
+
+  addPlanet({
+    radius: 18, pos: [-60, 8, -220],
+    baseColor: '#7e22ce', accentColor: '#f0abfc',
+    glowColor: 0xc084fc, emissive: '#3b0764',
+    rotSpeed: 0.003
+  });
+  addPlanet({
+    radius: 12, pos: [55, -22, -480],
+    baseColor: '#c2410c', accentColor: '#fed7aa',
+    glowColor: 0xfb923c, emissive: '#431407',
+    rotSpeed: 0.0045
+  });
+  addPlanet({
+    radius: 28, pos: [-70, 35, -850],
+    baseColor: '#0e7490', accentColor: '#a5f3fc',
+    glowColor: 0x22d3ee, emissive: '#083344',
+    ring: true, ringColor: 0xa5f3fc,
+    rotSpeed: 0.002
+  });
+  addPlanet({
+    radius: 16, pos: [70, 10, -1250],
+    baseColor: '#be185d', accentColor: '#f9a8d4',
+    glowColor: 0xec4899, emissive: '#500724',
+    rotSpeed: 0.0035
+  });
+  addPlanet({
+    radius: 22, pos: [0, -50, -1700],
+    baseColor: '#1e3a8a', accentColor: '#93c5fd',
+    glowColor: 0x3b82f6, emissive: '#0c1b4a',
+    ring: true, ringColor: 0x93c5fd,
+    rotSpeed: 0.0025
+  });
+
+  // ---------- LIGHTS ----------
+  scene.add(new THREE.AmbientLight(0x8b5cf6, 0.4));
+  const keyLight = new THREE.DirectionalLight(0xffd6ff, 1.1);
+  keyLight.position.set(3, 2, 4);
+  scene.add(keyLight);
+  const rim = new THREE.PointLight(0xec4899, 1.4, 900);
+  rim.position.set(-120, 30, -400);
+  scene.add(rim);
+  const rim2 = new THREE.PointLight(0x22d3ee, 1.2, 1200);
+  rim2.position.set(120, -30, -900);
+  scene.add(rim2);
+
+  // ---------- INTERACTION: MOUSE + SCROLL ----------
+  let mx = 0, my = 0, tmx = 0, tmy = 0;
+  window.addEventListener('pointermove', (e) => {
+    tmx = (e.clientX / window.innerWidth - 0.5) * 2;
+    tmy = (e.clientY / window.innerHeight - 0.5) * 2;
+  }, {passive: true});
+
+  let scrollProgress = 0, targetScrollProgress = 0;
+  function computeScrollProgress(){
+    const total = document.documentElement.scrollHeight - window.innerHeight;
+    targetScrollProgress = total > 0 ? Math.min(1, Math.max(0, scrollY / total)) : 0;
+  }
+
+  window.addEventListener('resize', () => { resize(); }, {passive:true});
+
+  // ---------- RENDER LOOP ----------
+  const clock = new THREE.Clock();
+  function render(){
+    const dt = Math.min(clock.getDelta(), 0.05);
+    const t = clock.getElapsedTime();
+
+    computeScrollProgress();
+    scrollProgress += (targetScrollProgress - scrollProgress) * 0.08;
+    mx += (tmx - mx) * 0.06;
+    my += (tmy - my) * 0.06;
+
+    // Camera flies forward as user scrolls (along -Z)
+    const targetZ = -scrollProgress * 1800;
+    camera.position.z += (targetZ - camera.position.z) * 0.09;
+    camera.position.x = mx * 18;
+    camera.position.y = -my * 12;
+    camera.rotation.y = -mx * 0.18;
+    camera.rotation.x = my * 0.12;
+
+    // Subtle star drift (parallax feel even when idle)
+    nearStars.rotation.z = t * 0.004;
+    midStars.rotation.z = -t * 0.0022;
+    farStars.rotation.z = t * 0.0012;
+
+    // Recycle stars behind camera to create endless tunnel
+    [nearStars, midStars, farStars].forEach((sys, idx) => {
+      const depth = [1800, 2600, 3400][idx];
+      const positions = sys.geometry.attributes.position.array;
+      const camZ = camera.position.z;
+      let changed = false;
+      for(let i = 0; i < positions.length; i += 3){
+        if(positions[i + 2] > camZ + 40){
+          positions[i + 2] = camZ - depth - Math.random() * 60;
+          changed = true;
+        } else if(positions[i + 2] < camZ - depth - 200){
+          positions[i + 2] = camZ + Math.random() * 40;
+          changed = true;
+        }
+      }
+      if(changed) sys.geometry.attributes.position.needsUpdate = true;
+    });
+
+    // Update star shader time
+    nearStars.material.uniforms.uTime.value = t;
+    midStars.material.uniforms.uTime.value = t * 0.7;
+    farStars.material.uniforms.uTime.value = t * 0.45;
+
+    // Rotate planets + subtle float
+    planets.forEach((p, i) => {
+      p.mesh.rotation.y += p.rotSpeed;
+      p.group.position.y += Math.sin(t * 0.6 + i * 1.3) * 0.03;
+    });
+
+    // Nebula gentle drift
+    nebulae.forEach((n, i) => {
+      n.material.rotation = t * 0.04 * (i % 2 ? 1 : -1);
+    });
+
+    renderer.render(scene, camera);
+    requestAnimationFrame(render);
+  }
+
+  if(!prefersReduced){
+    requestAnimationFrame(render);
+  } else {
+    // Still render one frame so it's not a black canvas
+    renderer.render(scene, camera);
+  }
+})();
 
 // ============ REVEAL ON SCROLL ============
 const io = new IntersectionObserver((entries) => {
