@@ -14,12 +14,18 @@
 <style>
 /* ============= RESET & BASE ============= */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;overflow:hidden;max-width:100vw}
-html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+:root{--states:10}
+html,body{max-width:100vw;overflow-x:hidden}
+html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;scroll-behavior:auto;scrollbar-width:none}
+html::-webkit-scrollbar,body::-webkit-scrollbar{width:0;height:0;display:none}
 body{
   font-family:'Inter','Noto Sans TC',-apple-system,BlinkMacSystemFont,sans-serif;
   background:#05050a;color:#e8e8f0;line-height:1.55;position:relative;
+  min-height:calc(var(--states) * 100vh);
 }
+/* Spacer element forces the document to span N * 100vh so the window scroll
+   position drives the 3D camera directly (scroll-linked animation). */
+.scroll-spacer{position:relative;width:1px;height:calc(var(--states) * 100vh);pointer-events:none}
 :lang(zh) body, body.lang-zh{font-family:'Noto Sans TC','Inter',sans-serif}
 img,video{max-width:100%;display:block}
 a{color:inherit;text-decoration:none;transition:color .2s ease}
@@ -126,38 +132,27 @@ header > *{pointer-events:auto}
 .side-nav-dot .lbl{display:none}
 @media(max-width:840px){.side-nav{display:none}}
 
-/* Right-edge scrubber: vertical rail the user can drag to change scenes */
+/* Right-edge scrubber: native-scrollbar-style thin white pill */
 .scrubber{
-  position:fixed;right:14px;top:50%;transform:translateY(-50%);
-  height:58vh;max-height:520px;width:34px;z-index:55;
-  display:flex;align-items:center;justify-content:center;
+  position:fixed;right:6px;top:0;bottom:0;
+  width:14px;z-index:55;
+  display:flex;align-items:stretch;justify-content:center;
   touch-action:none;user-select:none;-webkit-user-select:none;
+  padding:12vh 0;
 }
-.scrubber-rail{
-  position:relative;width:3px;height:100%;
-  background:rgba(255,255,255,.14);border-radius:2px;overflow:visible;
-}
-.scrubber-fill{
-  position:absolute;left:0;right:0;top:0;
-  background:linear-gradient(180deg,rgba(240,165,200,.85),rgba(240,165,200,.35));
-  border-radius:2px;transition:height .45s cubic-bezier(.4,0,.2,1);
-}
+.scrubber-rail{position:relative;width:100%;height:100%}
+.scrubber-fill,.scrubber-ticks{display:none}
 .scrubber-thumb{
-  position:absolute;left:50%;transform:translate(-50%,-50%);
-  width:14px;height:14px;border-radius:50%;
-  background:#f0a5c8;box-shadow:0 0 14px rgba(240,165,200,.8),0 2px 10px rgba(0,0,0,.5);
-  transition:top .45s cubic-bezier(.4,0,.2,1),width .2s ease,height .2s ease;
+  position:absolute;left:50%;top:0;transform:translateX(-50%);
+  width:4px;height:80px;border-radius:999px;
+  background:rgba(255,255,255,.85);
+  box-shadow:0 0 0 1px rgba(0,0,0,.15);
+  transition:top .5s cubic-bezier(.4,0,.2,1),width .2s ease,background .2s ease;
   cursor:grab;
 }
-.scrubber.dragging .scrubber-thumb{cursor:grabbing;width:18px;height:18px;transition:width .15s ease,height .15s ease}
-.scrubber.dragging .scrubber-fill,
-.scrubber.dragging .scrubber-thumb{transition:none}
-.scrubber-ticks{position:absolute;inset:0;pointer-events:none}
-.scrubber-tick{
-  position:absolute;left:50%;width:7px;height:1px;
-  background:rgba(255,255,255,.35);transform:translateX(-50%);
-}
-@media(max-width:640px){.scrubber{right:10px;height:62vh;width:30px}}
+.scrubber:hover .scrubber-thumb{width:5px;background:#fff}
+.scrubber.dragging .scrubber-thumb{cursor:grabbing;width:6px;background:#fff;transition:none}
+@media(max-width:640px){.scrubber{right:4px;width:12px;padding:14vh 0}.scrubber-thumb{height:64px}}
 
 /* ============= SCROLL CUE ============= */
 .scroll-cue{
@@ -670,6 +665,9 @@ body.modal-open{overflow:hidden}
 <div class="sky-bg" aria-hidden="true"></div>
 <canvas class="three-canvas" id="threeCanvas" aria-hidden="true"></canvas>
 <div class="vignette" aria-hidden="true"></div>
+
+<!-- Scroll spacer: creates the scroll range that drives the camera -->
+<div class="scroll-spacer" aria-hidden="true"></div>
 
 <!-- Side nav -->
 <nav class="side-nav" id="sideNav" aria-label="Scene navigation">
@@ -1211,9 +1209,8 @@ function setLang(lang){
    ============================================================ */
 const STATES_COUNT = 10;
 let currentState = 0;
-let transitionLock = false;
-let pendingState = -1;      // queued state while a transition is still running
-let speedBoost = 1;         // multiplier for camera lerp/spline speed, rises on rapid input
+let fracState = 0;          // continuous 0..(N-1), driven by window scroll position
+let fracSmooth = 0;         // lightly damped copy used for camera sampling
 
 const panels = document.querySelectorAll('.panel');
 const dots = document.querySelectorAll('.side-nav-dot');
@@ -1355,14 +1352,6 @@ function renderPedestalCard(){
 function setState(n, immediate){
   n = Math.max(0, Math.min(STATES_COUNT - 1, n));
   if(n === currentState && !immediate) return;
-  // If mid-transition, don't interrupt the camera arc (prevents clipping through
-  // the building). Queue the latest target and speed up the current animation.
-  if(transitionLock && !immediate){
-    pendingState = n;
-    speedBoost = Math.min(3.2, speedBoost + 0.9);
-    return;
-  }
-  if(!immediate) transitionLock = true;
   currentState = n;
 
   // Panels
@@ -1403,57 +1392,61 @@ function setState(n, immediate){
   // Scrubber
   updateScrubber(n);
 
-  // Notify 3D camera controller
-  if(window.__camera3D) window.__camera3D.setTarget(n);
+  // Camera is driven directly by window.scrollY (see bindScrollDriver) — no
+  // per-state camera nudging needed here.
 }
 
-/* ---------------- SCRUBBER (draggable scene progress bar) ---------------- */
-const scrubberEl = document.getElementById('scrubber');
-const scrubberFill = document.getElementById('scrubberFill');
-const scrubberThumb = document.getElementById('scrubberThumb');
-const scrubberTicks = document.getElementById('scrubberTicks');
-(function initScrubberTicks(){
-  for(let i = 0; i < STATES_COUNT; i++){
-    const t = document.createElement('span');
-    t.className = 'scrubber-tick';
-    t.style.top = (i / (STATES_COUNT - 1) * 100) + '%';
-    scrubberTicks.appendChild(t);
-  }
-})();
-function updateScrubber(n){
-  const pct = (n / (STATES_COUNT - 1)) * 100;
-  scrubberFill.style.height = pct + '%';
-  scrubberThumb.style.top = pct + '%';
-  scrubberEl.setAttribute('aria-valuenow', String(n + 1));
+/* ---------------- SCROLL → CAMERA DRIVER ----------------
+   The page is made N × 100vh tall. window.scrollY / maxScroll maps to a
+   continuous fractional index 0..(N-1). The 3D render loop samples the
+   camera path at that index every frame, so scrolling slowly plays the
+   animation slowly and scrolling fast plays it fast. Panels snap to the
+   nearest integer state. */
+function pageScrollMax(){
+  return Math.max(1, (document.documentElement.scrollHeight || document.body.scrollHeight) - window.innerHeight);
 }
+function progressToScrollY(frac){
+  return (frac / (STATES_COUNT - 1)) * pageScrollMax();
+}
+function onScroll(){
+  const max = pageScrollMax();
+  const frac = Math.max(0, Math.min(STATES_COUNT - 1, (window.scrollY / max) * (STATES_COUNT - 1)));
+  fracState = frac;
+  const rounded = Math.round(frac);
+  if(rounded !== currentState) setState(rounded);
+  updateScrubberFromFrac(frac);
+}
+window.addEventListener('scroll', onScroll, {passive:true});
+window.addEventListener('resize', onScroll, {passive:true});
+
+/* ---------------- SCRUBBER (native-style draggable scrollbar) ---------------- */
+const scrubberEl = document.getElementById('scrubber');
+const scrubberThumb = document.getElementById('scrubberThumb');
+const scrubberRail = scrubberEl.querySelector('.scrubber-rail');
+function updateScrubberFromFrac(frac){
+  const railH = scrubberRail.clientHeight;
+  const thumbH = scrubberThumb.offsetHeight || 80;
+  const travel = Math.max(0, railH - thumbH);
+  const progress = frac / (STATES_COUNT - 1);
+  scrubberThumb.style.top = (progress * travel) + 'px';
+  scrubberEl.setAttribute('aria-valuenow', String(Math.round(frac) + 1));
+}
+function updateScrubber(n){ updateScrubberFromFrac(n); }
+window.addEventListener('resize', () => updateScrubberFromFrac(fracState), {passive:true});
 (function bindScrubberDrag(){
-  const rail = scrubberEl.querySelector('.scrubber-rail');
   let dragging = false;
-  let lastAppliedState = -1;
-  function stateFromClientY(y){
-    const rect = rail.getBoundingClientRect();
-    const f = Math.max(0, Math.min(1, (y - rect.top) / rect.height));
-    return Math.round(f * (STATES_COUNT - 1));
+  function scrollFromClientY(y){
+    const rect = scrubberRail.getBoundingClientRect();
+    const thumbH = scrubberThumb.offsetHeight || 80;
+    const travel = Math.max(1, rect.height - thumbH);
+    const f = Math.max(0, Math.min(1, (y - rect.top - thumbH / 2) / travel));
+    window.scrollTo({top: f * pageScrollMax(), behavior: 'auto'});
   }
-  function onMove(y){
-    if(!dragging) return;
-    const s = stateFromClientY(y);
-    if(s !== lastAppliedState){
-      lastAppliedState = s;
-      // Preview: move thumb immediately while dragging, without forcing camera flicker
-      const pct = (s / (STATES_COUNT - 1)) * 100;
-      scrubberFill.style.height = pct + '%';
-      scrubberThumb.style.top = pct + '%';
-      // Apply state change (setState guards against same-state)
-      if(s !== currentState) setState(s);
-    }
-  }
+  function onMove(y){ if(dragging) scrollFromClientY(y); }
   function onDown(e){
-    dragging = true; lastAppliedState = currentState;
+    dragging = true;
     scrubberEl.classList.add('dragging');
-    const y = e.touches ? e.touches[0].clientY : e.clientY;
-    // Tap-to-jump: treat the initial press as a move
-    onMove(y);
+    scrollFromClientY(e.clientY);
     e.preventDefault();
   }
   function onUp(){
@@ -1479,63 +1472,38 @@ function cardNext(){
 }
 
 
-/* Debounced wheel + key + touch */
-let wheelTimer = 0;
-function handleWheel(e){
-  if(document.getElementById('detailModal').classList.contains('open')) return;
-  if(document.getElementById('videoModal').classList.contains('open')) return;
-  if(document.getElementById('imageModal').classList.contains('open')) return;
-  e.preventDefault();
-  const now = Date.now();
-  if(now - wheelTimer < 650) return;
-  // Require meaningful movement
-  if(Math.abs(e.deltaY) < 6) return;
-  wheelTimer = now;
-  if(e.deltaY > 0) setState(currentState + 1);
-  else setState(currentState - 1);
+/* Scroll-driven model: wheel/touch are handled natively by the browser, so
+   we don't intercept them. Keyboard + dot clicks + "goto" links smooth-scroll
+   to the matching state position. */
+function scrollToState(n, smooth){
+  n = Math.max(0, Math.min(STATES_COUNT - 1, n));
+  window.scrollTo({top: progressToScrollY(n), behavior: smooth === false ? 'auto' : 'smooth'});
 }
-window.addEventListener('wheel', handleWheel, {passive:false});
-
-/* Keyboard */
 window.addEventListener('keydown', (e) => {
   if(document.getElementById('detailModal').classList.contains('open')) return;
   if(e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === 'ArrowRight' || e.key === ' '){
-    e.preventDefault(); setState(currentState + 1);
+    e.preventDefault(); scrollToState(Math.round(fracState) + 1);
   } else if(e.key === 'ArrowUp' || e.key === 'PageUp' || e.key === 'ArrowLeft'){
-    e.preventDefault(); setState(currentState - 1);
+    e.preventDefault(); scrollToState(Math.round(fracState) - 1);
   } else if(e.key === 'Home'){
-    e.preventDefault(); setState(0);
+    e.preventDefault(); scrollToState(0);
   } else if(e.key === 'End'){
-    e.preventDefault(); setState(STATES_COUNT - 1);
+    e.preventDefault(); scrollToState(STATES_COUNT - 1);
   }
 });
-
-/* Touch swipe */
-let touchStartY = 0, touchStartT = 0;
-window.addEventListener('touchstart', (e) => {
-  touchStartY = e.touches[0].clientY; touchStartT = Date.now();
-}, {passive:true});
-window.addEventListener('touchend', (e) => {
-  if(document.getElementById('detailModal').classList.contains('open')) return;
-  const dy = e.changedTouches[0].clientY - touchStartY;
-  const dt = Date.now() - touchStartT;
-  if(Math.abs(dy) < 50 || dt > 800) return;
-  if(dy < 0) setState(currentState + 1);
-  else setState(currentState - 1);
-}, {passive:true});
 
 /* Pedestal arrows — cycle cards within current pedestal */
 pedPrevBtn.addEventListener('click', cardPrev);
 pedNextBtn.addEventListener('click', cardNext);
 
 /* Side nav dots */
-dots.forEach(d => d.addEventListener('click', () => setState(parseInt(d.dataset.idx, 10))));
+dots.forEach(d => d.addEventListener('click', () => scrollToState(parseInt(d.dataset.idx, 10))));
 
 /* Header "goto" links */
 document.querySelectorAll('[data-goto]').forEach(el => {
   el.addEventListener('click', (e) => {
     e.preventDefault();
-    setState(parseInt(el.dataset.goto, 10));
+    scrollToState(parseInt(el.dataset.goto, 10));
   });
 });
 
@@ -1992,13 +1960,14 @@ document.addEventListener('keydown', (e) => {
     { pos: [0, 11, 10],  look: [0, 5, -8] },
   ];
 
-  /* Camera target — smooth lerp or spline transition */
-  const camTargetPos = new THREE.Vector3(...CAM_STATES[0].pos);
-  const camTargetLook = new THREE.Vector3(...CAM_STATES[0].look);
-  const camCurPos = camTargetPos.clone();
-  const camCurLook = camTargetLook.clone();
+  /* Camera sampling: each segment between state i and i+1 is either a
+     CatmullRom spline (if TRANSITION_VIAS has an entry) or a straight lerp.
+     The render loop samples at fracSmooth — a lightly-damped copy of
+     fracState, which itself tracks window.scrollY. Scroll faster -> camera
+     moves faster, 1:1. */
+  const camCurPos = new THREE.Vector3(...CAM_STATES[0].pos);
+  const camCurLook = new THREE.Vector3(...CAM_STATES[0].look);
 
-  /* Per-transition spline via-points: pull back + arc right around building */
   const TRANSITION_VIAS = {
     '2->3': {
       pos:  [[70, 36, -80], [130, 26, -10], [95, 16, 60]],
@@ -2006,32 +1975,47 @@ document.addEventListener('keydown', (e) => {
     },
   };
 
-  let prevTargetIdx = 0;
-  let tcurvePos = null, tcurveLook = null, tT = 1;
-
-  window.__camera3D = {
-    setTarget(stateIdx){
-      const st = CAM_STATES[stateIdx];
-      const key = prevTargetIdx + '->' + stateIdx;
-      const via = TRANSITION_VIAS[key];
-      camTargetPos.set(st.pos[0], st.pos[1], st.pos[2]);
-      camTargetLook.set(st.look[0], st.look[1], st.look[2]);
-      if(via){
-        const pts = [camCurPos.clone(),
-          ...via.pos.map(p => new THREE.Vector3(p[0], p[1], p[2])),
-          camTargetPos.clone()];
-        const lks = [camCurLook.clone(),
-          ...via.look.map(p => new THREE.Vector3(p[0], p[1], p[2])),
-          camTargetLook.clone()];
-        tcurvePos = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', 0.5);
-        tcurveLook = new THREE.CatmullRomCurve3(lks, false, 'catmullrom', 0.5);
-        tT = 0;
-      } else {
-        tcurvePos = null; tcurveLook = null; tT = 1;
-      }
-      prevTargetIdx = stateIdx;
+  // Build one curve per segment (or null for linear)
+  const SEGMENT_CURVES = [];
+  for(let i = 0; i < STATES_COUNT - 1; i++){
+    const via = TRANSITION_VIAS[i + '->' + (i+1)];
+    if(via){
+      const pts = [new THREE.Vector3(...CAM_STATES[i].pos),
+        ...via.pos.map(p => new THREE.Vector3(p[0], p[1], p[2])),
+        new THREE.Vector3(...CAM_STATES[i+1].pos)];
+      const lks = [new THREE.Vector3(...CAM_STATES[i].look),
+        ...via.look.map(p => new THREE.Vector3(p[0], p[1], p[2])),
+        new THREE.Vector3(...CAM_STATES[i+1].look)];
+      SEGMENT_CURVES.push({
+        pos: new THREE.CatmullRomCurve3(pts, false, 'catmullrom', 0.5),
+        look: new THREE.CatmullRomCurve3(lks, false, 'catmullrom', 0.5),
+      });
+    } else {
+      SEGMENT_CURVES.push(null);
     }
-  };
+  }
+  const _tmpPos = new THREE.Vector3();
+  const _tmpLook = new THREE.Vector3();
+  function sampleCamera(frac, outPos, outLook){
+    const clamped = Math.max(0, Math.min(STATES_COUNT - 1, frac));
+    const i = Math.min(STATES_COUNT - 2, Math.floor(clamped));
+    const f = Math.max(0, Math.min(1, clamped - i));
+    const seg = SEGMENT_CURVES[i];
+    if(seg){
+      // Ease slightly around the via-arc so the arc feels natural
+      const e = f < 0.5 ? 2*f*f : 1 - Math.pow(-2*f + 2, 2)/2;
+      outPos.copy(seg.pos.getPointAt(e));
+      outLook.copy(seg.look.getPointAt(e));
+    } else {
+      const a = CAM_STATES[i], b = CAM_STATES[i+1];
+      outPos.set(a.pos[0] + (b.pos[0]-a.pos[0]) * f,
+                 a.pos[1] + (b.pos[1]-a.pos[1]) * f,
+                 a.pos[2] + (b.pos[2]-a.pos[2]) * f);
+      outLook.set(a.look[0] + (b.look[0]-a.look[0]) * f,
+                  a.look[1] + (b.look[1]-a.look[1]) * f,
+                  a.look[2] + (b.look[2]-a.look[2]) * f);
+    }
+  }
 
   /* Mouse parallax */
   let mx = 0, my = 0, tmx = 0, tmy = 0;
@@ -2051,32 +2035,11 @@ document.addEventListener('keydown', (e) => {
     const dt = Math.min(clock.getDelta(), 0.05);
     const t = clock.getElapsedTime();
 
-    // Decay boost toward 1 over time (about 0.5s to return to normal speed)
-    if(speedBoost > 1) speedBoost = Math.max(1, speedBoost - dt * 3.2);
-
-    // Camera: follow spline during special transitions, else lerp
-    if(tcurvePos && tT < 1){
-      tT = Math.min(1, tT + 0.0065 * speedBoost);
-      const e = 1 - Math.pow(1 - tT, 2.6); // ease-out
-      camCurPos.copy(tcurvePos.getPointAt(e));
-      camCurLook.copy(tcurveLook.getPointAt(e));
-      if(tT >= 1){ tcurvePos = null; tcurveLook = null; }
-    } else {
-      const k = Math.min(0.32, 0.06 * speedBoost);
-      camCurPos.lerp(camTargetPos, k);
-      camCurLook.lerp(camTargetLook, k);
-      // Release input lock once the camera has visually settled near the target
-      if(transitionLock && camCurPos.distanceToSquared(camTargetPos) < 0.35 && camCurLook.distanceToSquared(camTargetLook) < 0.35){
-        transitionLock = false;
-        // Flush the last queued swipe if the user tried to skip ahead mid-transition
-        if(pendingState !== -1 && pendingState !== currentState){
-          const next = pendingState; pendingState = -1;
-          setState(next);
-        } else {
-          pendingState = -1;
-        }
-      }
-    }
+    // Scroll-driven camera: fracState tracks window.scrollY exactly. A small
+    // damping on fracSmooth makes mouse-wheel clicks feel less jittery while
+    // still staying 1:1 with touch/drag scroll.
+    fracSmooth += (fracState - fracSmooth) * Math.min(1, dt * 14);
+    sampleCamera(fracSmooth, camCurPos, camCurLook);
 
     // Mouse parallax
     mx += (tmx - mx) * 0.05;
@@ -2134,8 +2097,9 @@ document.addEventListener('keydown', (e) => {
   if(!prefersReduced){
     requestAnimationFrame(render);
   } else {
-    camera.position.copy(camTargetPos);
-    camera.lookAt(camTargetLook);
+    sampleCamera(0, camCurPos, camCurLook);
+    camera.position.copy(camCurPos);
+    camera.lookAt(camCurLook);
     renderer.render(scene, camera);
     hideLoading();
   }
@@ -2166,8 +2130,13 @@ function hideLoading(){
 /* Safety: force hide after 7s if Three.js hangs */
 setTimeout(() => hideLoading(), 7000);
 
-/* Init state 0 */
+/* Init state 0 and sync scroll-driven state */
 setState(0, true);
+// Some browsers restore scroll position on reload; pull it back to the top
+// so the site always starts at state 0.
+if('scrollRestoration' in history) history.scrollRestoration = 'manual';
+window.scrollTo(0, 0);
+onScroll();
 </script>
 </body>
 </html>
