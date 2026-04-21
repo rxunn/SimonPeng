@@ -568,9 +568,9 @@ body.modal-open{overflow:hidden}
   .ped-index{font-size:10px;letter-spacing:.22em;margin-bottom:12px}
 
   /* Pedestal carousel — hover card above pedestal top (card bottom ≈ pedestal top) */
-  .ped-card-stage{top:46%}
-  .ped-arrows{top:46%;width:calc(172px + 120px)}
-  .ped-card-float{width:172px;margin-left:-86px;margin-top:calc(-172px * 4 / 3 / 2)}
+  .ped-card-stage{top:48%}
+  .ped-arrows{top:48%;width:calc(144px + 96px)}
+  .ped-card-float{width:144px;margin-left:-72px;margin-top:calc(-144px * 4 / 3 / 2)}
   .ped-arrow{width:44px;height:44px}
   .ped-arrow svg{width:16px;height:16px}
 
@@ -607,8 +607,8 @@ body.modal-open{overflow:hidden}
   .panel-meta,.panel-skills{grid-template-columns:1fr}
   .panel h2{font-size:24px}
   .panel-pedestal h3{font-size:22px}
-  .ped-card-float{width:156px;margin-left:-78px;margin-top:calc(-156px * 4 / 3 / 2)}
-  .ped-arrows{width:calc(156px + 110px)}
+  .ped-card-float{width:128px;margin-left:-64px;margin-top:calc(-128px * 4 / 3 / 2)}
+  .ped-arrows{width:calc(128px + 84px)}
   .contact-ctas{flex-direction:column;align-items:stretch}
   .btn{justify-content:center}
 }
@@ -1225,8 +1225,14 @@ function openCardAction(card){
 }
 
 const CARD_STEP = 72;       // degrees between adjacent cards
-const CARD_RADIUS = 230;    // arc radius in px
 const CARD_VISIBLE_RANGE = 2; // show cards within ±2 slots (front + neighbors)
+function getCardRadius(){
+  const w = window.innerWidth;
+  if(w <= 380) return 130;
+  if(w <= 640) return 150;
+  if(w <= 980) return 190;
+  return 230;
+}
 
 function buildCarousel(){
   pedCardStack.innerHTML = '';
@@ -1284,7 +1290,7 @@ function signedDistance(i){
 function placeCard(el, i){
   const d = signedDistance(i);
   const angle = d * CARD_STEP;
-  el.style.transform = `rotateY(${angle}deg) translateZ(${CARD_RADIUS}px)`;
+  el.style.transform = `rotateY(${angle}deg) translateZ(${getCardRadius()}px)`;
   el.classList.toggle('is-front', d === 0);
   // hide cards that are past the visible arc so they don't flash on the opposite side
   const vis = Math.abs(d) <= CARD_VISIBLE_RANGE;
@@ -1294,6 +1300,8 @@ function placeCard(el, i){
 function updateCardPositions(){
   Array.from(pedCardStack.children).forEach((el, i) => placeCard(el, i));
 }
+window.addEventListener('resize', () => updateCardPositions(), {passive:true});
+window.addEventListener('orientationchange', () => setTimeout(updateCardPositions, 140), {passive:true});
 
 function renderPedestalCard(){
   if(!currentCardSet.length){ pedCardStage.classList.remove('visible'); return; }
