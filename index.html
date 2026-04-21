@@ -490,6 +490,138 @@ body.lang-zh span[data-zh],body.lang-zh a[data-zh]{display:inline}
 
 /* Prevent body scroll during modal */
 body.modal-open{overflow:hidden}
+
+/* ============= RESPONSIVE — TABLET / MOBILE ============= */
+/* Larger tablets / small laptops (981-1024px): slightly tighter side panels */
+@media(max-width:1024px) and (min-width:981px){
+  header{padding:20px 26px}
+  .state-meta{top:66px;right:26px}
+  .side-nav{left:22px;gap:14px}
+  .panel-exterior{width:min(520px,60vw)}
+  .panel-pedestal{left:5vw;width:min(420px,46vw);top:14vh}
+  .ped-card-float{width:clamp(160px,22vw,220px)}
+  .ped-arrows{width:calc(clamp(160px,22vw,220px) + 180px)}
+}
+
+/* Tablets / large phones (641-980px): centered layouts, card carousel below title */
+@media(max-width:980px) and (min-width:641px){
+  .panel-pedestal{top:70px;left:50%;width:min(520px,80vw);text-align:center}
+  .panel-pedestal.active{transform:translate(-50%,0)}
+  .panel-pedestal .panel-eyebrow,
+  .panel-pedestal .ped-index{justify-content:center}
+  .panel-pedestal p{margin-left:auto;margin-right:auto}
+  .ped-card-stage{top:58%}
+  .ped-arrows{top:58%}
+}
+
+/* Phones (≤ 640px): single-column, smaller type, scrollable panels if needed */
+@media(max-width:640px){
+  header{padding:14px 16px}
+  .logo{font-size:15px}.logo-mark{width:20px;height:20px}
+  .header-right{gap:14px}
+  .lang-toggle{font-size:11px}
+  .lang-toggle button{padding:4px 11px}
+
+  .state-meta{top:54px;right:16px}
+  .state-meta .state-num{font-size:22px;margin-bottom:2px}
+  .state-meta{font-size:9px;letter-spacing:.22em}
+
+  .scroll-cue{bottom:20px;font-size:9px;letter-spacing:.24em;gap:8px}
+  .scroll-cue .cue-icon{width:22px;height:36px}
+
+  /* Intro */
+  .panel-intro{width:92vw;padding:0 4vw}
+  .panel-intro h1{font-size:clamp(42px,12vw,72px);margin-bottom:18px;letter-spacing:-.03em}
+  .intro-chip{font-size:10px;letter-spacing:.22em;margin-bottom:18px}
+  .panel-intro .sub{font-size:14px;max-width:92vw;margin-bottom:24px;line-height:1.55}
+
+  /* Exterior panels (states 1-3): centered, readable padding */
+  .panel-exterior{
+    top:50%;left:50%;right:auto;
+    width:min(460px,90vw);padding:0 6px;
+  }
+  .panel h2{font-size:clamp(26px,7.2vw,40px);line-height:1.08;margin-bottom:16px;word-break:keep-all;overflow-wrap:break-word}
+  .panel-exterior p{font-size:14.5px;line-height:1.6;margin-bottom:14px;max-width:100%}
+  .panel-meta{grid-template-columns:1fr 1fr;gap:14px 18px;margin-top:20px;padding-top:16px;max-width:100%}
+  .panel-meta-item .lbl{font-size:9.5px;letter-spacing:.2em}
+  .panel-meta-item .val{font-size:13.5px}
+  .panel-skills{grid-template-columns:1fr 1fr;gap:14px 18px;margin-top:16px;max-width:100%}
+  .skill-pill h4{font-size:10px;letter-spacing:.2em}
+  .skill-pill p{font-size:12.5px !important;line-height:1.5 !important}
+  .panel-timeline .tl-item{padding:12px 0}
+  .panel-timeline .tl-year{font-size:10.5px}
+  .panel-timeline .tl-role{font-size:14.5px}
+  .panel-timeline .tl-company{font-size:12px}
+  .panel-timeline .tl-desc{font-size:12.5px !important;line-height:1.5 !important}
+  .panel-eyebrow{font-size:10px;letter-spacing:.22em;margin-bottom:14px}
+
+  /* Pedestal states 4-8: title at top, card below centered */
+  .panel-pedestal{
+    top:64px;left:50%;transform:translate(-50%,30px);
+    width:min(460px,90vw);padding:0 6px;text-align:center;
+  }
+  .panel-pedestal.active{transform:translate(-50%,0)}
+  .panel-pedestal .panel-eyebrow,
+  .panel-pedestal .ped-index{justify-content:center}
+  .panel-pedestal h3{font-size:clamp(24px,6.8vw,36px);line-height:1.1;margin-bottom:12px;word-break:keep-all;overflow-wrap:break-word}
+  .panel-pedestal p{font-size:13.5px;line-height:1.55;max-width:100%;margin:0 auto}
+  .ped-index{font-size:10px;letter-spacing:.22em;margin-bottom:12px}
+
+  /* Pedestal carousel — centered, visible arrows within viewport */
+  .ped-card-stage{top:62%}
+  .ped-arrows{top:62%;width:calc(172px + 120px)}
+  .ped-card-float{width:172px;margin-left:-86px;margin-top:calc(-172px * 4 / 3 / 2)}
+  .ped-arrow{width:44px;height:44px}
+  .ped-arrow svg{width:16px;height:16px}
+
+  /* Contact */
+  .panel-contact{width:92vw;padding:0 4vw}
+  .panel-contact h2{font-size:clamp(28px,7.5vw,44px);margin-bottom:14px}
+  .panel-contact p{font-size:14px;margin-bottom:22px}
+  .contact-ctas{gap:10px}
+  .btn{padding:11px 16px;font-size:13px}
+
+  /* Detail modal */
+  .detail-modal-inner{padding:80px 18px 60px}
+  .detail-back{top:14px;left:14px;padding:8px 14px;font-size:11px}
+  .detail-head{margin-bottom:28px}
+  .detail-title{font-size:clamp(26px,7.4vw,40px)}
+  .detail-desc{font-size:14.5px}
+  .sub-head{margin:32px 0 18px}
+  .sub-head h3{font-size:17px}
+  .sub-head p{font-size:13px}
+  .work-card .info{padding:16px 18px 20px}
+  .work-card h3{font-size:17px}
+  .work-card .desc{font-size:12.5px}
+
+  .modal{padding:64px 16px 16px}
+  .modal-close{top:14px;left:14px;padding:8px 14px;font-size:11px}
+
+  .ig-card{padding:28px 20px}
+  .ig-card h3{font-size:21px}
+  .ig-card p{font-size:13px}
+}
+
+/* Small phones (≤ 380px): single-column meta, even tighter */
+@media(max-width:380px){
+  .panel-meta,.panel-skills{grid-template-columns:1fr}
+  .panel h2{font-size:24px}
+  .panel-pedestal h3{font-size:22px}
+  .ped-card-float{width:156px;margin-left:-78px;margin-top:calc(-156px * 4 / 3 / 2)}
+  .ped-arrows{width:calc(156px + 110px)}
+  .contact-ctas{flex-direction:column;align-items:stretch}
+  .btn{justify-content:center}
+}
+
+/* Landscape phones — keep pedestal card visible with limited vertical room */
+@media(max-height:520px) and (orientation:landscape){
+  .panel-pedestal{top:60px}
+  .ped-card-stage,.ped-arrows{top:60%}
+  .ped-card-float{width:120px;margin-left:-60px;margin-top:calc(-120px * 4 / 3 / 2)}
+  .ped-arrows{width:calc(120px + 110px)}
+  .panel-intro h1{font-size:clamp(36px,8vw,64px);margin-bottom:12px}
+  .panel-intro .sub{margin-bottom:16px}
+}
 </style>
 </head>
 <body class="lang-en">
@@ -1389,11 +1521,18 @@ document.addEventListener('keydown', (e) => {
   function resize(){
     const w = window.innerWidth, h = window.innerHeight;
     renderer.setSize(w, h, false);
-    camera.aspect = w / h;
+    const aspect = w / h;
+    camera.aspect = aspect;
+    // Widen FOV on narrow/portrait viewports so the scene doesn't clip into walls.
+    // Base vertical FOV 52°; scale up as aspect narrows, capped at 88°.
+    const baseFov = 52;
+    const fov = aspect < 1 ? Math.min(88, baseFov / Math.max(aspect, 0.42)) : baseFov;
+    camera.fov = fov;
     camera.updateProjectionMatrix();
   }
   resize();
   window.addEventListener('resize', resize, {passive:true});
+  window.addEventListener('orientationchange', () => setTimeout(resize, 120), {passive:true});
 
   /* ---------------- GROUND (desert) ---------------- */
   function makeGroundTexture(){
