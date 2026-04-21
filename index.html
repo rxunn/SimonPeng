@@ -14,18 +14,22 @@
 <style>
 /* ============= RESET & BASE ============= */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--states:10}
+:root{--states:10;--seg-h:140vh}
 html,body{max-width:100vw;overflow-x:hidden}
-html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;scroll-behavior:auto;scrollbar-width:none}
+html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;scroll-behavior:auto;scrollbar-width:none;scroll-snap-type:y proximity}
 html::-webkit-scrollbar,body::-webkit-scrollbar{width:0;height:0;display:none}
 body{
   font-family:'Inter','Noto Sans TC',-apple-system,BlinkMacSystemFont,sans-serif;
   background:#05050a;color:#e8e8f0;line-height:1.55;position:relative;
-  min-height:calc(var(--states) * 100vh);
 }
-/* Spacer element forces the document to span N * 100vh so the window scroll
-   position drives the 3D camera directly (scroll-linked animation). */
-.scroll-spacer{position:relative;width:1px;height:calc(var(--states) * 100vh);pointer-events:none}
+/* Scroll-driven sections. Each section is one state worth of scroll, and
+   scroll-snap-align:start makes the browser gently snap the viewport to the
+   nearest state boundary when the user stops scrolling (proximity, not
+   mandatory — feels smooth, not jumpy). */
+.scroll-sections{position:relative;width:1px;pointer-events:none;z-index:-1}
+.scroll-section{height:var(--seg-h);scroll-snap-align:start}
+.scroll-section:last-child{height:100vh}
+@media(max-width:640px){:root{--seg-h:130vh}}
 :lang(zh) body, body.lang-zh{font-family:'Noto Sans TC','Inter',sans-serif}
 img,video{max-width:100%;display:block}
 a{color:inherit;text-decoration:none;transition:color .2s ease}
@@ -666,8 +670,8 @@ body.modal-open{overflow:hidden}
 <canvas class="three-canvas" id="threeCanvas" aria-hidden="true"></canvas>
 <div class="vignette" aria-hidden="true"></div>
 
-<!-- Scroll spacer: creates the scroll range that drives the camera -->
-<div class="scroll-spacer" aria-hidden="true"></div>
+<!-- Scroll-linked sections: one per state, drives the 3D camera via scrollY -->
+<div class="scroll-sections" id="scrollHost" aria-hidden="true"></div>
 
 <!-- Side nav -->
 <nav class="side-nav" id="sideNav" aria-label="Scene navigation">
@@ -1397,20 +1401,31 @@ function setState(n, immediate){
 }
 
 /* ---------------- SCROLL → CAMERA DRIVER ----------------
-   The page is made N × 100vh tall. window.scrollY / maxScroll maps to a
-   continuous fractional index 0..(N-1). The 3D render loop samples the
-   camera path at that index every frame, so scrolling slowly plays the
-   animation slowly and scrolling fast plays it fast. Panels snap to the
-   nearest integer state. */
-function pageScrollMax(){
-  return Math.max(1, (document.documentElement.scrollHeight || document.body.scrollHeight) - window.innerHeight);
+   Each state occupies one "segment" (1 segment = 1.4 × viewport height, set
+   in CSS as --seg-h). window.scrollY / segHeight gives a continuous
+   fractional state index 0..(N-1) that drives the camera each frame, and
+   CSS scroll-snap gently lands the viewport on state boundaries when the
+   user stops scrolling. Net result: smooth continuous camera motion as you
+   scroll, stable resting positions. */
+(function buildScrollSections(){
+  const host = document.getElementById('scrollHost');
+  for(let i = 0; i < STATES_COUNT; i++){
+    const s = document.createElement('div');
+    s.className = 'scroll-section';
+    s.dataset.state = i;
+    host.appendChild(s);
+  }
+})();
+function getSegHeight(){
+  // Mirrors the --seg-h CSS variable (140vh desktop, 130vh phones)
+  return (window.innerWidth <= 640 ? 1.30 : 1.40) * window.innerHeight;
 }
 function progressToScrollY(frac){
-  return (frac / (STATES_COUNT - 1)) * pageScrollMax();
+  return frac * getSegHeight();
 }
 function onScroll(){
-  const max = pageScrollMax();
-  const frac = Math.max(0, Math.min(STATES_COUNT - 1, (window.scrollY / max) * (STATES_COUNT - 1)));
+  const seg = getSegHeight();
+  const frac = Math.max(0, Math.min(STATES_COUNT - 1, window.scrollY / seg));
   fracState = frac;
   const rounded = Math.round(frac);
   if(rounded !== currentState) setState(rounded);
@@ -1440,7 +1455,7 @@ window.addEventListener('resize', () => updateScrubberFromFrac(fracState), {pass
     const thumbH = scrubberThumb.offsetHeight || 80;
     const travel = Math.max(1, rect.height - thumbH);
     const f = Math.max(0, Math.min(1, (y - rect.top - thumbH / 2) / travel));
-    window.scrollTo({top: f * pageScrollMax(), behavior: 'auto'});
+    window.scrollTo({top: progressToScrollY(f * (STATES_COUNT - 1)), behavior: 'auto'});
   }
   function onMove(y){ if(dragging) scrollFromClientY(y); }
   function onDown(e){
@@ -2035,10 +2050,11 @@ document.addEventListener('keydown', (e) => {
     const dt = Math.min(clock.getDelta(), 0.05);
     const t = clock.getElapsedTime();
 
-    // Scroll-driven camera: fracState tracks window.scrollY exactly. A small
-    // damping on fracSmooth makes mouse-wheel clicks feel less jittery while
-    // still staying 1:1 with touch/drag scroll.
-    fracSmooth += (fracState - fracSmooth) * Math.min(1, dt * 14);
+    // Scroll-driven camera: fracState tracks window.scrollY exactly. An
+    // exponential smoother (~60ms half-life) hides per-event wheel jitter
+    // without adding perceivable lag to touch/drag scroll.
+    const alpha = 1 - Math.exp(-dt / 0.06);
+    fracSmooth += (fracState - fracSmooth) * alpha;
     sampleCamera(fracSmooth, camCurPos, camCurLook);
 
     // Mouse parallax
