@@ -1311,6 +1311,8 @@ function renderPedestalCard(){
 function setState(n, immediate){
   n = Math.max(0, Math.min(STATES_COUNT - 1, n));
   if(n === currentState && !immediate) return;
+  if(transitionLock && !immediate) return;
+  if(!immediate) transitionLock = true;
   currentState = n;
 
   // Panels
@@ -1946,6 +1948,10 @@ document.addEventListener('keydown', (e) => {
     } else {
       camCurPos.lerp(camTargetPos, 0.06);
       camCurLook.lerp(camTargetLook, 0.06);
+      // Release input lock once the camera has visually settled near the target
+      if(transitionLock && camCurPos.distanceToSquared(camTargetPos) < 0.35 && camCurLook.distanceToSquared(camTargetLook) < 0.35){
+        transitionLock = false;
+      }
     }
 
     // Mouse parallax
