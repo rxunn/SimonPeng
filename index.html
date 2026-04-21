@@ -126,6 +126,39 @@ header > *{pointer-events:auto}
 .side-nav-dot .lbl{display:none}
 @media(max-width:840px){.side-nav{display:none}}
 
+/* Right-edge scrubber: vertical rail the user can drag to change scenes */
+.scrubber{
+  position:fixed;right:14px;top:50%;transform:translateY(-50%);
+  height:58vh;max-height:520px;width:34px;z-index:55;
+  display:flex;align-items:center;justify-content:center;
+  touch-action:none;user-select:none;-webkit-user-select:none;
+}
+.scrubber-rail{
+  position:relative;width:3px;height:100%;
+  background:rgba(255,255,255,.14);border-radius:2px;overflow:visible;
+}
+.scrubber-fill{
+  position:absolute;left:0;right:0;top:0;
+  background:linear-gradient(180deg,rgba(240,165,200,.85),rgba(240,165,200,.35));
+  border-radius:2px;transition:height .45s cubic-bezier(.4,0,.2,1);
+}
+.scrubber-thumb{
+  position:absolute;left:50%;transform:translate(-50%,-50%);
+  width:14px;height:14px;border-radius:50%;
+  background:#f0a5c8;box-shadow:0 0 14px rgba(240,165,200,.8),0 2px 10px rgba(0,0,0,.5);
+  transition:top .45s cubic-bezier(.4,0,.2,1),width .2s ease,height .2s ease;
+  cursor:grab;
+}
+.scrubber.dragging .scrubber-thumb{cursor:grabbing;width:18px;height:18px;transition:width .15s ease,height .15s ease}
+.scrubber.dragging .scrubber-fill,
+.scrubber.dragging .scrubber-thumb{transition:none}
+.scrubber-ticks{position:absolute;inset:0;pointer-events:none}
+.scrubber-tick{
+  position:absolute;left:50%;width:7px;height:1px;
+  background:rgba(255,255,255,.35);transform:translateX(-50%);
+}
+@media(max-width:640px){.scrubber{right:10px;height:62vh;width:30px}}
+
 /* ============= SCROLL CUE ============= */
 .scroll-cue{
   position:fixed;bottom:32px;left:50%;transform:translateX(-50%);z-index:55;
@@ -652,6 +685,15 @@ body.modal-open{overflow:hidden}
   <button class="side-nav-dot" data-idx="9"><span class="lbl"><span data-en>Contact</span><span data-zh>聯絡</span></span></button>
 </nav>
 
+<!-- Right-edge scrubber (draggable scene progress bar) -->
+<div class="scrubber" id="scrubber" role="slider" aria-label="Scene progress" aria-valuemin="1" aria-valuemax="10" aria-valuenow="1">
+  <div class="scrubber-rail">
+    <div class="scrubber-fill" id="scrubberFill"></div>
+    <div class="scrubber-ticks" id="scrubberTicks"></div>
+    <div class="scrubber-thumb" id="scrubberThumb"></div>
+  </div>
+</div>
+
 <!-- Header -->
 <header>
   <div class="logo">
@@ -1170,6 +1212,8 @@ function setLang(lang){
 const STATES_COUNT = 10;
 let currentState = 0;
 let transitionLock = false;
+let pendingState = -1;      // queued state while a transition is still running
+let speedBoost = 1;         // multiplier for camera lerp/spline speed, rises on rapid input
 
 const panels = document.querySelectorAll('.panel');
 const dots = document.querySelectorAll('.side-nav-dot');
@@ -1311,7 +1355,13 @@ function renderPedestalCard(){
 function setState(n, immediate){
   n = Math.max(0, Math.min(STATES_COUNT - 1, n));
   if(n === currentState && !immediate) return;
-  if(transitionLock && !immediate) return;
+  // If mid-transition, don't interrupt the camera arc (prevents clipping through
+  // the building). Queue the latest target and speed up the current animation.
+  if(transitionLock && !immediate){
+    pendingState = n;
+    speedBoost = Math.min(3.2, speedBoost + 0.9);
+    return;
+  }
   if(!immediate) transitionLock = true;
   currentState = n;
 
@@ -1350,9 +1400,72 @@ function setState(n, immediate){
   // State meta (1-indexed display)
   stateNum.textContent = String(n + 1).padStart(2, '0');
 
+  // Scrubber
+  updateScrubber(n);
+
   // Notify 3D camera controller
   if(window.__camera3D) window.__camera3D.setTarget(n);
 }
+
+/* ---------------- SCRUBBER (draggable scene progress bar) ---------------- */
+const scrubberEl = document.getElementById('scrubber');
+const scrubberFill = document.getElementById('scrubberFill');
+const scrubberThumb = document.getElementById('scrubberThumb');
+const scrubberTicks = document.getElementById('scrubberTicks');
+(function initScrubberTicks(){
+  for(let i = 0; i < STATES_COUNT; i++){
+    const t = document.createElement('span');
+    t.className = 'scrubber-tick';
+    t.style.top = (i / (STATES_COUNT - 1) * 100) + '%';
+    scrubberTicks.appendChild(t);
+  }
+})();
+function updateScrubber(n){
+  const pct = (n / (STATES_COUNT - 1)) * 100;
+  scrubberFill.style.height = pct + '%';
+  scrubberThumb.style.top = pct + '%';
+  scrubberEl.setAttribute('aria-valuenow', String(n + 1));
+}
+(function bindScrubberDrag(){
+  const rail = scrubberEl.querySelector('.scrubber-rail');
+  let dragging = false;
+  let lastAppliedState = -1;
+  function stateFromClientY(y){
+    const rect = rail.getBoundingClientRect();
+    const f = Math.max(0, Math.min(1, (y - rect.top) / rect.height));
+    return Math.round(f * (STATES_COUNT - 1));
+  }
+  function onMove(y){
+    if(!dragging) return;
+    const s = stateFromClientY(y);
+    if(s !== lastAppliedState){
+      lastAppliedState = s;
+      // Preview: move thumb immediately while dragging, without forcing camera flicker
+      const pct = (s / (STATES_COUNT - 1)) * 100;
+      scrubberFill.style.height = pct + '%';
+      scrubberThumb.style.top = pct + '%';
+      // Apply state change (setState guards against same-state)
+      if(s !== currentState) setState(s);
+    }
+  }
+  function onDown(e){
+    dragging = true; lastAppliedState = currentState;
+    scrubberEl.classList.add('dragging');
+    const y = e.touches ? e.touches[0].clientY : e.clientY;
+    // Tap-to-jump: treat the initial press as a move
+    onMove(y);
+    e.preventDefault();
+  }
+  function onUp(){
+    if(!dragging) return;
+    dragging = false;
+    scrubberEl.classList.remove('dragging');
+  }
+  scrubberEl.addEventListener('pointerdown', (e) => { onDown(e); try{ scrubberEl.setPointerCapture(e.pointerId); }catch{} });
+  scrubberEl.addEventListener('pointermove', (e) => onMove(e.clientY));
+  scrubberEl.addEventListener('pointerup', onUp);
+  scrubberEl.addEventListener('pointercancel', onUp);
+})();
 
 function cardPrev(){
   if(!currentCardSet.length) return;
@@ -1938,19 +2051,30 @@ document.addEventListener('keydown', (e) => {
     const dt = Math.min(clock.getDelta(), 0.05);
     const t = clock.getElapsedTime();
 
+    // Decay boost toward 1 over time (about 0.5s to return to normal speed)
+    if(speedBoost > 1) speedBoost = Math.max(1, speedBoost - dt * 3.2);
+
     // Camera: follow spline during special transitions, else lerp
     if(tcurvePos && tT < 1){
-      tT = Math.min(1, tT + 0.0065);
+      tT = Math.min(1, tT + 0.0065 * speedBoost);
       const e = 1 - Math.pow(1 - tT, 2.6); // ease-out
       camCurPos.copy(tcurvePos.getPointAt(e));
       camCurLook.copy(tcurveLook.getPointAt(e));
       if(tT >= 1){ tcurvePos = null; tcurveLook = null; }
     } else {
-      camCurPos.lerp(camTargetPos, 0.06);
-      camCurLook.lerp(camTargetLook, 0.06);
+      const k = Math.min(0.32, 0.06 * speedBoost);
+      camCurPos.lerp(camTargetPos, k);
+      camCurLook.lerp(camTargetLook, k);
       // Release input lock once the camera has visually settled near the target
       if(transitionLock && camCurPos.distanceToSquared(camTargetPos) < 0.35 && camCurLook.distanceToSquared(camTargetLook) < 0.35){
         transitionLock = false;
+        // Flush the last queued swipe if the user tried to skip ahead mid-transition
+        if(pendingState !== -1 && pendingState !== currentState){
+          const next = pendingState; pendingState = -1;
+          setState(next);
+        } else {
+          pendingState = -1;
+        }
       }
     }
 
