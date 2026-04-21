@@ -1434,6 +1434,50 @@ function onScroll(){
 window.addEventListener('scroll', onScroll, {passive:true});
 window.addEventListener('resize', onScroll, {passive:true});
 
+/* ---------------- SMOOTH WHEEL SCROLL ----------------
+   Intercept mouse-wheel events and animate window.scrollY toward a target
+   instead of letting the browser jump per-notch. Touch/trackpad momentum
+   scrolling stays native (already smooth). The RAF loop in initScene()
+   calls smoothScrollTick() each frame. */
+let scrollTargetY = 0;
+let scrollSmoothActive = false;
+function maxScrollY(){
+  return Math.max(0, (document.documentElement.scrollHeight || document.body.scrollHeight) - window.innerHeight);
+}
+function anyModalOpen(){
+  return document.getElementById('detailModal').classList.contains('open')
+      || document.getElementById('videoModal').classList.contains('open')
+      || document.getElementById('imageModal').classList.contains('open');
+}
+window.addEventListener('wheel', (e) => {
+  if(anyModalOpen()) return;
+  e.preventDefault();
+  if(!scrollSmoothActive) scrollTargetY = window.scrollY;
+  // deltaMode: 0=pixel, 1=line (~16px), 2=page
+  let dy = e.deltaY;
+  if(e.deltaMode === 1) dy *= 16;
+  else if(e.deltaMode === 2) dy *= window.innerHeight;
+  scrollTargetY = Math.max(0, Math.min(maxScrollY(), scrollTargetY + dy));
+  scrollSmoothActive = true;
+}, {passive:false});
+window.addEventListener('touchstart', () => {
+  // Hand control back to native momentum scrolling
+  scrollSmoothActive = false;
+}, {passive:true});
+function smoothScrollTick(dt){
+  if(!scrollSmoothActive) return;
+  const cur = window.scrollY;
+  const delta = scrollTargetY - cur;
+  if(Math.abs(delta) < 0.4){
+    if(cur !== scrollTargetY) window.scrollTo(0, scrollTargetY);
+    scrollSmoothActive = false;
+    return;
+  }
+  // ~220ms half-life — silky but still responsive
+  const k = 1 - Math.exp(-dt / 0.22);
+  window.scrollTo(0, cur + delta * k);
+}
+
 /* ---------------- SCRUBBER (native-style draggable scrollbar) ---------------- */
 const scrubberEl = document.getElementById('scrubber');
 const scrubberThumb = document.getElementById('scrubberThumb');
@@ -1460,6 +1504,7 @@ window.addEventListener('resize', () => updateScrubberFromFrac(fracState), {pass
   function onMove(y){ if(dragging) scrollFromClientY(y); }
   function onDown(e){
     dragging = true;
+    scrollSmoothActive = false; // cancel any in-flight smooth wheel animation
     scrubberEl.classList.add('dragging');
     scrollFromClientY(e.clientY);
     e.preventDefault();
@@ -2050,10 +2095,12 @@ document.addEventListener('keydown', (e) => {
     const dt = Math.min(clock.getDelta(), 0.05);
     const t = clock.getElapsedTime();
 
-    // Scroll-driven camera: fracState tracks window.scrollY exactly. An
-    // exponential smoother (~60ms half-life) hides per-event wheel jitter
-    // without adding perceivable lag to touch/drag scroll.
-    const alpha = 1 - Math.exp(-dt / 0.06);
+    // Drive the page scroll ourselves on wheel events so the animation
+    // interpolates smoothly between notches instead of jumping per-tick.
+    smoothScrollTick(dt);
+    // Light residual smoothing for any remaining jitter (e.g. imprecise
+    // trackpad deltas); ~40ms half-life keeps touch feeling direct.
+    const alpha = 1 - Math.exp(-dt / 0.04);
     fracSmooth += (fracState - fracSmooth) * alpha;
     sampleCamera(fracSmooth, camCurPos, camCurLook);
 
