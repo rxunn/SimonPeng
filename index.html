@@ -567,9 +567,9 @@ body.modal-open{overflow:hidden}
   .panel-pedestal p{font-size:13.5px;line-height:1.55;max-width:100%;margin:0 auto}
   .ped-index{font-size:10px;letter-spacing:.22em;margin-bottom:12px}
 
-  /* Pedestal carousel — centered, visible arrows within viewport */
-  .ped-card-stage{top:62%}
-  .ped-arrows{top:62%;width:calc(172px + 120px)}
+  /* Pedestal carousel — sit on top of the 3D pedestal */
+  .ped-card-stage{top:70%}
+  .ped-arrows{top:70%;width:calc(172px + 120px)}
   .ped-card-float{width:172px;margin-left:-86px;margin-top:calc(-172px * 4 / 3 / 2)}
   .ped-arrow{width:44px;height:44px}
   .ped-arrow svg{width:16px;height:16px}
@@ -1947,6 +1947,16 @@ document.addEventListener('keydown', (e) => {
     camera.position.copy(camCurPos);
     camera.position.x += mx * 1.8;
     camera.position.y -= my * 1.2;
+
+    // Portrait-mode framing adjustments
+    const isPortrait = window.innerHeight > window.innerWidth;
+    if(isPortrait && currentState >= 1 && currentState <= 3){
+      // Pull camera further out on phones so the building doesn't crowd overlaid text
+      const radialPull = 1.22;
+      camera.position.x *= radialPull;
+      camera.position.z *= radialPull;
+      camera.position.y = camCurPos.y * 1.08;
+    }
     camera.lookAt(camCurLook);
 
     // Particle drift (upward + recycle)
