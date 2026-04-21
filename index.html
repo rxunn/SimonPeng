@@ -136,6 +136,26 @@ header > *{pointer-events:auto}
 .side-nav-dot .lbl{display:none}
 @media(max-width:840px){.side-nav{display:none}}
 
+/* Liquid cursor — a ring that follows the pointer with elastic lag and
+   stretches in the direction of motion for a "flowing" feel. Hidden on
+   touch devices where a mouse isn't present. */
+.liquid-cursor{
+  position:fixed;top:0;left:0;width:34px;height:34px;
+  border:1.5px solid rgba(255,255,255,.85);border-radius:50%;
+  pointer-events:none;z-index:1000;
+  transform:translate3d(-100px,-100px,0);
+  mix-blend-mode:difference;will-change:transform;display:none;
+  backdrop-filter:blur(1px);-webkit-backdrop-filter:blur(1px);
+}
+.liquid-cursor::after{
+  content:'';position:absolute;left:50%;top:50%;
+  width:4px;height:4px;border-radius:50%;
+  background:rgba(255,255,255,.85);transform:translate(-50%,-50%);
+}
+.liquid-cursor.tap{animation:liquidTap .5s ease-out}
+@keyframes liquidTap{0%{border-width:1.5px}40%{border-width:4px;transform:translate3d(var(--cx),var(--cy),0) scale(1.4)}100%{border-width:1.5px}}
+@media (hover:hover) and (pointer:fine){.liquid-cursor{display:block}body{cursor:none}a,button,[role="button"],input,textarea,.ped-card-float,.ped-arrow{cursor:none}}
+
 /* Right-edge scrubber: native-scrollbar-style thin white pill */
 .scrubber{
   position:fixed;right:6px;top:0;bottom:0;
@@ -672,6 +692,9 @@ body.modal-open{overflow:hidden}
 
 <!-- Scroll-linked sections: one per state, drives the 3D camera via scrollY -->
 <div class="scroll-sections" id="scrollHost" aria-hidden="true"></div>
+
+<!-- Liquid cursor (desktop pointer devices only; hidden via CSS on touch) -->
+<div class="liquid-cursor" id="liquidCursor" aria-hidden="true"></div>
 
 <!-- Side nav -->
 <nav class="side-nav" id="sideNav" aria-label="Scene navigation">
@@ -1214,7 +1237,6 @@ function setLang(lang){
 const STATES_COUNT = 10;
 let currentState = 0;
 let fracState = 0;          // continuous 0..(N-1), driven by window scroll position
-let fracSmooth = 0;         // lightly damped copy used for camera sampling
 
 const panels = document.querySelectorAll('.panel');
 const dots = document.querySelectorAll('.side-nav-dot');
@@ -1473,8 +1495,8 @@ function smoothScrollTick(dt){
     scrollSmoothActive = false;
     return;
   }
-  // ~220ms half-life — silky but still responsive
-  const k = 1 - Math.exp(-dt / 0.22);
+  // ~320ms half-life — silky, Lenis-like inertia without feeling floaty
+  const k = 1 - Math.exp(-dt / 0.32);
   window.scrollTo(0, cur + delta * k);
 }
 
@@ -1518,6 +1540,52 @@ window.addEventListener('resize', () => updateScrubberFromFrac(fracState), {pass
   scrubberEl.addEventListener('pointermove', (e) => onMove(e.clientY));
   scrubberEl.addEventListener('pointerup', onUp);
   scrubberEl.addEventListener('pointercancel', onUp);
+})();
+
+/* ---------------- LIQUID CURSOR ----------------
+   Ring follows the pointer with elastic lag and stretches along the motion
+   vector so fast flicks smear into a flowing shape (Vertex3D-style). Only
+   active on hover-capable pointer devices — CSS hides the element otherwise
+   and this loop becomes a cheap no-op. */
+(function bindLiquidCursor(){
+  const el = document.getElementById('liquidCursor');
+  if(!el) return;
+  // Don't run the loop on touch-only devices
+  if(!window.matchMedia('(hover:hover) and (pointer:fine)').matches) return;
+  let tx = -100, ty = -100;   // target (true pointer)
+  let cx = -100, cy = -100;   // smoothed position
+  let vx = 0, vy = 0;          // smoothed velocity for stretch
+  let visible = false;
+  window.addEventListener('pointermove', (e) => {
+    if(e.pointerType === 'touch') return;
+    tx = e.clientX; ty = e.clientY;
+    if(!visible){ cx = tx; cy = ty; visible = true; el.style.opacity = '1'; }
+  }, {passive:true});
+  window.addEventListener('pointerleave', () => { el.style.opacity = '0'; visible = false; }, {passive:true});
+  window.addEventListener('pointerdown', () => {
+    el.classList.remove('tap'); void el.offsetWidth; el.classList.add('tap');
+  }, {passive:true});
+  let last = performance.now();
+  function tick(now){
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    // Elastic lag (~80ms half-life feels like liquid without dragging)
+    const k = 1 - Math.exp(-dt / 0.08);
+    const ndx = (tx - cx) * k, ndy = (ty - cy) * k;
+    cx += ndx; cy += ndy;
+    // Smooth velocity (px per frame @ ~16ms) for stretch
+    const ivx = ndx / Math.max(dt, 0.001) / 60;
+    const ivy = ndy / Math.max(dt, 0.001) / 60;
+    vx += (ivx - vx) * 0.25;
+    vy += (ivy - vy) * 0.25;
+    const speed = Math.min(1.4, Math.hypot(vx, vy) / 18);
+    const angle = Math.atan2(vy, vx);
+    const sx = 1 + speed * 0.9;
+    const sy = Math.max(0.5, 1 - speed * 0.45);
+    el.style.transform =
+      `translate3d(${cx}px, ${cy}px, 0) translate(-50%,-50%) rotate(${angle}rad) scale(${sx}, ${sy})`;
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
 })();
 
 function cardPrev(){
@@ -2022,9 +2090,8 @@ document.addEventListener('keydown', (e) => {
 
   /* Camera sampling: each segment between state i and i+1 is either a
      CatmullRom spline (if TRANSITION_VIAS has an entry) or a straight lerp.
-     The render loop samples at fracSmooth — a lightly-damped copy of
-     fracState, which itself tracks window.scrollY. Scroll faster -> camera
-     moves faster, 1:1. */
+     The render loop samples at fracState, which is recomputed from
+     window.scrollY every frame. Scroll faster -> camera moves faster, 1:1. */
   const camCurPos = new THREE.Vector3(...CAM_STATES[0].pos);
   const camCurLook = new THREE.Vector3(...CAM_STATES[0].look);
 
@@ -2062,10 +2129,10 @@ document.addEventListener('keydown', (e) => {
     const f = Math.max(0, Math.min(1, clamped - i));
     const seg = SEGMENT_CURVES[i];
     if(seg){
-      // Ease slightly around the via-arc so the arc feels natural
-      const e = f < 0.5 ? 2*f*f : 1 - Math.pow(-2*f + 2, 2)/2;
-      outPos.copy(seg.pos.getPointAt(e));
-      outLook.copy(seg.look.getPointAt(e));
+      // Strict 1:1 scroll→curve mapping (no easing) so scrolling slow/fast
+      // yields a perfectly linear response and the via-arc tracks scroll.
+      outPos.copy(seg.pos.getPointAt(f));
+      outLook.copy(seg.look.getPointAt(f));
     } else {
       const a = CAM_STATES[i], b = CAM_STATES[i+1];
       outPos.set(a.pos[0] + (b.pos[0]-a.pos[0]) * f,
@@ -2098,11 +2165,11 @@ document.addEventListener('keydown', (e) => {
     // Drive the page scroll ourselves on wheel events so the animation
     // interpolates smoothly between notches instead of jumping per-tick.
     smoothScrollTick(dt);
-    // Light residual smoothing for any remaining jitter (e.g. imprecise
-    // trackpad deltas); ~40ms half-life keeps touch feeling direct.
-    const alpha = 1 - Math.exp(-dt / 0.04);
-    fracSmooth += (fracState - fracSmooth) * alpha;
-    sampleCamera(fracSmooth, camCurPos, camCurLook);
+    // Read the live scroll position every frame so camera tracks the page
+    // 1:1 without waiting on the 'scroll' event — removes input→camera lag.
+    const _segH = getSegHeight();
+    fracState = Math.max(0, Math.min(STATES_COUNT - 1, window.scrollY / _segH));
+    sampleCamera(fracState, camCurPos, camCurLook);
 
     // Mouse parallax
     mx += (tmx - mx) * 0.05;
