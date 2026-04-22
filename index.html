@@ -136,25 +136,8 @@ header > *{pointer-events:auto}
 .side-nav-dot .lbl{display:none}
 @media(max-width:840px){.side-nav{display:none}}
 
-/* Liquid cursor — a ring that follows the pointer with elastic lag and
-   stretches in the direction of motion for a "flowing" feel. Hidden on
-   touch devices where a mouse isn't present. */
-.liquid-cursor{
-  position:fixed;top:0;left:0;width:34px;height:34px;
-  border:1.5px solid rgba(255,255,255,.85);border-radius:50%;
-  pointer-events:none;z-index:1000;
-  transform:translate3d(-100px,-100px,0);
-  mix-blend-mode:difference;will-change:transform;display:none;
-  backdrop-filter:blur(1px);-webkit-backdrop-filter:blur(1px);
-}
-.liquid-cursor::after{
-  content:'';position:absolute;left:50%;top:50%;
-  width:4px;height:4px;border-radius:50%;
-  background:rgba(255,255,255,.85);transform:translate(-50%,-50%);
-}
-.liquid-cursor.tap{animation:liquidTap .5s ease-out}
-@keyframes liquidTap{0%{border-width:1.5px}40%{border-width:4px;transform:translate3d(var(--cx),var(--cy),0) scale(1.4)}100%{border-width:1.5px}}
-@media (hover:hover) and (pointer:fine){.liquid-cursor{display:block}body{cursor:none}a,button,[role="button"],input,textarea,.ped-card-float,.ped-arrow{cursor:none}}
+
+
 
 /* Right-edge scrubber: native-scrollbar-style thin white pill */
 .scrubber{
@@ -344,10 +327,11 @@ header > *{pointer-events:auto}
 
 /* ============= PEDESTAL ARROWS (flank floating card) ============= */
 .ped-arrows{
-  position:fixed;top:34%;left:50%;z-index:46;pointer-events:none;
+  position:fixed;z-index:46;pointer-events:none;
   width:calc(clamp(180px, 17vw, 240px) + 160px);
   transform:translate(-50%,-50%);
   display:flex;justify-content:space-between;
+  will-change:left,top;
   opacity:0;transition:opacity .45s ease;
 }
 .ped-arrows.visible{opacity:1}
@@ -365,18 +349,17 @@ header > *{pointer-events:auto}
 
 /* ============= FLOATING PEDESTAL CARD STACK (states 4-8) ============= */
 .ped-card-stage{
-  position:fixed;left:50%;top:34%;z-index:43;
-  width:0;height:0;pointer-events:none;opacity:0;
-  transition:opacity .5s ease;
-  perspective:1800px;
-  will-change:transform;
+  position:fixed;z-index:45;
+  width:600px;height:600px;margin-top:-300px;margin-left:-300px;
+  opacity:0;transition:opacity .5s ease;
+  perspective:1800px;will-change:left,top;
 }
-.ped-card-stage.visible{opacity:1;pointer-events:none}
-.ped-card-stage.visible .ped-card-float{pointer-events:auto}
+.ped-card-stage.visible{opacity:1}
 .ped-card-stack{
-  position:absolute;left:0;top:0;width:0;height:0;
+  position:absolute;left:300px;top:300px;width:0;height:0;
   transform-style:preserve-3d;
 }
+.ped-card-stage.visible .ped-card-float{cursor:pointer}
 .ped-card-float{
   position:absolute;left:0;top:0;
   width:clamp(180px, 17vw, 240px);aspect-ratio:3/4;
@@ -562,8 +545,6 @@ body.modal-open{overflow:hidden}
   .panel-pedestal .panel-eyebrow,
   .panel-pedestal .ped-index{justify-content:center}
   .panel-pedestal p{margin-left:auto;margin-right:auto}
-  .ped-card-stage{top:58%}
-  .ped-arrows{top:58%}
 }
 
 /* Phones (≤ 640px): single-column, smaller type, scrollable panels if needed */
@@ -620,8 +601,7 @@ body.modal-open{overflow:hidden}
   .ped-index{font-size:10px;letter-spacing:.22em;margin-bottom:12px}
 
   /* Pedestal carousel — hover card above pedestal top (card bottom ≈ pedestal top) */
-  .ped-card-stage{top:48%}
-  .ped-arrows{top:48%;width:calc(144px + 96px)}
+  .ped-arrows{width:calc(144px + 96px)}
   .ped-card-float{width:144px;margin-left:-72px;margin-top:calc(-144px * 4 / 3 / 2)}
   .ped-arrow{width:44px;height:44px}
   .ped-arrow svg{width:16px;height:16px}
@@ -668,7 +648,6 @@ body.modal-open{overflow:hidden}
 /* Landscape phones — keep pedestal card visible with limited vertical room */
 @media(max-height:520px) and (orientation:landscape){
   .panel-pedestal{top:60px}
-  .ped-card-stage,.ped-arrows{top:60%}
   .ped-card-float{width:120px;margin-left:-60px;margin-top:calc(-120px * 4 / 3 / 2)}
   .ped-arrows{width:calc(120px + 110px)}
   .panel-intro h1{font-size:clamp(36px,8vw,64px);margin-bottom:12px}
@@ -693,8 +672,7 @@ body.modal-open{overflow:hidden}
 <!-- Scroll-linked sections: one per state, drives the 3D camera via scrollY -->
 <div class="scroll-sections" id="scrollHost" aria-hidden="true"></div>
 
-<!-- Liquid cursor (desktop pointer devices only; hidden via CSS on touch) -->
-<div class="liquid-cursor" id="liquidCursor" aria-hidden="true"></div>
+
 
 <!-- Side nav -->
 <nav class="side-nav" id="sideNav" aria-label="Scene navigation">
@@ -1214,6 +1192,8 @@ body.modal-open{overflow:hidden}
   </div>
 </div>
 
+<script src="https://unpkg.com/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+<script src="https://unpkg.com/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
 <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
 <script>
 /* ============================================================
@@ -1323,18 +1303,7 @@ function buildCarousel(){
         <p>${card.descHTML}</p>
       </div>
     `;
-    div.addEventListener('click', () => {
-      const idx = parseInt(div.dataset.idx, 10);
-      if(idx === currentCardIdx){
-        openCardAction(currentCardSet[idx]);
-      } else {
-        const n = currentCardSet.length;
-        const fwd = (idx - currentCardIdx + n) % n;
-        const back = (currentCardIdx - idx + n) % n;
-        if(fwd <= back) for(let s=0; s<fwd; s++) cardNext();
-        else for(let s=0; s<back; s++) cardPrev();
-      }
-    });
+
     // snap to initial position without animation
     div.style.transition = 'none';
     placeCard(div, i);
@@ -1344,6 +1313,23 @@ function buildCarousel(){
   });
   updateCardPositions();
 }
+
+pedCardStage.addEventListener('pointerup', (e) => {
+  if(!currentCardSet || currentCardSet.length === 0) return;
+  const rect = pedCardStage.getBoundingClientRect();
+  const cx = rect.left + 300;
+  const cy = rect.top + 300;
+  const dx = e.clientX - cx;
+  const dy = e.clientY - cy;
+  
+  if(Math.abs(dx) < 140 && Math.abs(dy) < 180) {
+    openCardAction(currentCardSet[currentCardIdx]);
+  } else if(dx > 140 && dx < 300 && Math.abs(dy) < 180) {
+    cardNext();
+  } else if(dx < -140 && dx > -300 && Math.abs(dy) < 180) {
+    cardPrev();
+  }
+});
 
 // signed shortest-path distance from currentCardIdx to i, wrapped mod N
 function signedDistance(i){
@@ -1457,47 +1443,34 @@ window.addEventListener('scroll', onScroll, {passive:true});
 window.addEventListener('resize', onScroll, {passive:true});
 
 /* ---------------- SMOOTH WHEEL SCROLL ----------------
-   Intercept mouse-wheel events and animate window.scrollY toward a target
-   instead of letting the browser jump per-notch. Touch/trackpad momentum
-   scrolling stays native (already smooth). The RAF loop in initScene()
-   calls smoothScrollTick() each frame. */
-let scrollTargetY = 0;
-let scrollSmoothActive = false;
-function maxScrollY(){
-  return Math.max(0, (document.documentElement.scrollHeight || document.body.scrollHeight) - window.innerHeight);
+   Using Lenis for ultra-smooth Vertex3D-level inertia scrolling. */
+const lenis = new Lenis({
+  duration: 1.2,
+  easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+  smoothWheel: true,
+  smoothTouch: false
+});
+function raf(time) {
+  lenis.raf(time);
+  requestAnimationFrame(raf);
 }
+requestAnimationFrame(raf);
+
 function anyModalOpen(){
   return document.getElementById('detailModal').classList.contains('open')
       || document.getElementById('videoModal').classList.contains('open')
       || document.getElementById('imageModal').classList.contains('open');
 }
-window.addEventListener('wheel', (e) => {
-  if(anyModalOpen()) return;
-  e.preventDefault();
-  if(!scrollSmoothActive) scrollTargetY = window.scrollY;
-  // deltaMode: 0=pixel, 1=line (~16px), 2=page
-  let dy = e.deltaY;
-  if(e.deltaMode === 1) dy *= 16;
-  else if(e.deltaMode === 2) dy *= window.innerHeight;
-  scrollTargetY = Math.max(0, Math.min(maxScrollY(), scrollTargetY + dy));
-  scrollSmoothActive = true;
-}, {passive:false});
-window.addEventListener('touchstart', () => {
-  // Hand control back to native momentum scrolling
-  scrollSmoothActive = false;
-}, {passive:true});
-function smoothScrollTick(dt){
-  if(!scrollSmoothActive) return;
-  const cur = window.scrollY;
-  const delta = scrollTargetY - cur;
-  if(Math.abs(delta) < 0.4){
-    if(cur !== scrollTargetY) window.scrollTo(0, scrollTargetY);
-    scrollSmoothActive = false;
-    return;
-  }
-  // ~320ms half-life — silky, Lenis-like inertia without feeling floaty
-  const k = 1 - Math.exp(-dt / 0.32);
-  window.scrollTo(0, cur + delta * k);
+
+// Pause Lenis when modal is open
+lenis.on('scroll', () => {
+  if (anyModalOpen()) lenis.stop();
+  else lenis.start();
+});
+
+let scrollSmoothActive = true;
+function smoothScrollTick(dt) {
+  // handled by Lenis via requestAnimationFrame
 }
 
 /* ---------------- SCRUBBER (native-style draggable scrollbar) ---------------- */
@@ -1542,51 +1515,7 @@ window.addEventListener('resize', () => updateScrubberFromFrac(fracState), {pass
   scrubberEl.addEventListener('pointercancel', onUp);
 })();
 
-/* ---------------- LIQUID CURSOR ----------------
-   Ring follows the pointer with elastic lag and stretches along the motion
-   vector so fast flicks smear into a flowing shape (Vertex3D-style). Only
-   active on hover-capable pointer devices — CSS hides the element otherwise
-   and this loop becomes a cheap no-op. */
-(function bindLiquidCursor(){
-  const el = document.getElementById('liquidCursor');
-  if(!el) return;
-  // Don't run the loop on touch-only devices
-  if(!window.matchMedia('(hover:hover) and (pointer:fine)').matches) return;
-  let tx = -100, ty = -100;   // target (true pointer)
-  let cx = -100, cy = -100;   // smoothed position
-  let vx = 0, vy = 0;          // smoothed velocity for stretch
-  let visible = false;
-  window.addEventListener('pointermove', (e) => {
-    if(e.pointerType === 'touch') return;
-    tx = e.clientX; ty = e.clientY;
-    if(!visible){ cx = tx; cy = ty; visible = true; el.style.opacity = '1'; }
-  }, {passive:true});
-  window.addEventListener('pointerleave', () => { el.style.opacity = '0'; visible = false; }, {passive:true});
-  window.addEventListener('pointerdown', () => {
-    el.classList.remove('tap'); void el.offsetWidth; el.classList.add('tap');
-  }, {passive:true});
-  let last = performance.now();
-  function tick(now){
-    const dt = Math.min(0.05, (now - last) / 1000); last = now;
-    // Elastic lag (~80ms half-life feels like liquid without dragging)
-    const k = 1 - Math.exp(-dt / 0.08);
-    const ndx = (tx - cx) * k, ndy = (ty - cy) * k;
-    cx += ndx; cy += ndy;
-    // Smooth velocity (px per frame @ ~16ms) for stretch
-    const ivx = ndx / Math.max(dt, 0.001) / 60;
-    const ivy = ndy / Math.max(dt, 0.001) / 60;
-    vx += (ivx - vx) * 0.25;
-    vy += (ivy - vy) * 0.25;
-    const speed = Math.min(1.4, Math.hypot(vx, vy) / 18);
-    const angle = Math.atan2(vy, vx);
-    const sx = 1 + speed * 0.9;
-    const sy = Math.max(0.5, 1 - speed * 0.45);
-    el.style.transform =
-      `translate3d(${cx}px, ${cy}px, 0) translate(-50%,-50%) rotate(${angle}rad) scale(${sx}, ${sy})`;
-    requestAnimationFrame(tick);
-  }
-  requestAnimationFrame(tick);
-})();
+
 
 function cardPrev(){
   if(!currentCardSet.length) return;
@@ -1726,11 +1655,26 @@ document.addEventListener('keydown', (e) => {
   const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const isMobile = window.innerWidth < 720;
 
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile, alpha: true, powerPreference: 'high-performance' });
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2));
-  renderer.setClearColor(0x000000, 0);
+  renderer.setClearColor(0x000000, 1);
 
   const scene = new THREE.Scene();
+  
+  // Create gradient texture identical to CSS .sky-bg
+  const bgCanvas = document.createElement('canvas');
+  bgCanvas.width = 2; bgCanvas.height = 512;
+  const bgCtx = bgCanvas.getContext('2d');
+  const bgGrad = bgCtx.createLinearGradient(0, 0, 0, 512);
+  bgGrad.addColorStop(0, '#181028');
+  bgGrad.addColorStop(0.4, '#3a2a4b');
+  bgGrad.addColorStop(1, '#5c4068');
+  bgCtx.fillStyle = bgGrad;
+  bgCtx.fillRect(0, 0, 2, 512);
+  const bgTex = new THREE.CanvasTexture(bgCanvas);
+  bgTex.colorSpace = THREE.SRGBColorSpace;
+  scene.background = bgTex;
+  
   scene.fog = new THREE.Fog(0x2a1538, 80, 320);
 
   const camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.1, 600);
@@ -2059,6 +2003,48 @@ document.addEventListener('keydown', (e) => {
   interiorLight.position.set(0, 14, 0);
   scene.add(interiorLight);
 
+  /* ---------------- LIQUID POST-PROCESSING (Vertex3D Style) ---------------- */
+  const renderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, {
+    minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat
+  });
+  const orthoCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  const orthoScene = new THREE.Scene();
+  const liquidShader = new THREE.ShaderMaterial({
+    uniforms: {
+      tDiffuse: { value: renderTarget.texture },
+      uMouse: { value: new THREE.Vector2(0.5, 0.5) },
+      uVelocity: { value: 0 },
+      uTime: { value: 0 },
+      uAspect: { value: window.innerWidth / window.innerHeight }
+    },
+    vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position, 1.0); }`,
+    fragmentShader: `
+      uniform sampler2D tDiffuse; uniform vec2 uMouse; uniform float uVelocity;
+      uniform float uTime; uniform float uAspect; varying vec2 vUv;
+      void main() {
+        vec2 uv = vUv; vec2 p = uv - uMouse; p.x *= uAspect;
+        float dist = length(p);
+        float ripple = sin(dist * 50.0 - uTime * 15.0) * exp(-dist * 8.0) * uVelocity * 0.05;
+        vec4 color = texture2D(tDiffuse, uv + normalize(p) * ripple);
+        gl_FragColor = color;
+      }
+    `,
+    blending: THREE.NoBlending
+  });
+  const orthoQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), liquidShader);
+  orthoScene.add(orthoQuad);
+
+  let targetMouse = new THREE.Vector2(0.5, 0.5), currentMouse = new THREE.Vector2(0.5, 0.5);
+  let mouseSpeed = 0;
+  window.addEventListener('pointermove', (e) => {
+    targetMouse.x = e.clientX / window.innerWidth;
+    targetMouse.y = 1.0 - (e.clientY / window.innerHeight);
+  }, {passive:true});
+  window.addEventListener('resize', () => {
+    renderTarget.setSize(window.innerWidth, window.innerHeight);
+    liquidShader.uniforms.uAspect.value = window.innerWidth / window.innerHeight;
+  });
+
   /* ---------------- CAMERA KEYFRAMES ----------------
      Building center at (0,0,0). Interior: x[-20,20], z[-18,18], y=0..18.
      States 4-8 = rotating clockwise around pedestal ring; camera stays near room-center.
@@ -2214,7 +2200,37 @@ document.addEventListener('keydown', (e) => {
       p.light.intensity = 1.3 + 0.5 * Math.sin(phase * 1.4);
     });
 
+    // Dynamically align pedCardStage to the active 3D pedestal
+    if(pedCardStage.classList.contains('visible') && currentState >= 4 && currentState <= 8) {
+      const pIdx = currentState - 4;
+      if(PEDESTAL_POS[pIdx]) {
+        const pos = PEDESTAL_POS[pIdx].clone();
+        pos.y = 7.0; // Perfect vertical alignment for cards
+        pos.project(camera);
+        const x = (pos.x * 0.5 + 0.5) * window.innerWidth;
+        const y = (-pos.y * 0.5 + 0.5) * window.innerHeight;
+        pedCardStage.style.left = x + 'px';
+        pedCardStage.style.top = y + 'px';
+        pedArrows.style.left = x + 'px';
+        pedArrows.style.top = y + 'px';
+      }
+    }
+
+    // Liquid mouse logic
+    currentMouse.lerp(targetMouse, 0.15);
+    const vel = targetMouse.distanceTo(currentMouse);
+    mouseSpeed += (vel * 10.0 - mouseSpeed) * 0.1;
+    liquidShader.uniforms.uMouse.value.copy(currentMouse);
+    liquidShader.uniforms.uVelocity.value = mouseSpeed;
+    liquidShader.uniforms.uTime.value = t;
+
+    // Render original scene to target
+    renderer.setRenderTarget(renderTarget);
     renderer.render(scene, camera);
+    
+    // Render target to screen using liquid shader
+    renderer.setRenderTarget(null);
+    renderer.render(orthoScene, orthoCamera);
 
     if(!firstFrame){
       firstFrame = true;
@@ -2230,7 +2246,10 @@ document.addEventListener('keydown', (e) => {
     sampleCamera(0, camCurPos, camCurLook);
     camera.position.copy(camCurPos);
     camera.lookAt(camCurLook);
+    renderer.setRenderTarget(renderTarget);
     renderer.render(scene, camera);
+    renderer.setRenderTarget(null);
+    renderer.render(orthoScene, orthoCamera);
     hideLoading();
   }
 })();
