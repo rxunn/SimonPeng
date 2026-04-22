@@ -1655,26 +1655,11 @@ document.addEventListener('keydown', (e) => {
   const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const isMobile = window.innerWidth < 720;
 
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile, powerPreference: 'high-performance' });
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile, alpha: true, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2));
-  renderer.setClearColor(0x000000, 1);
+  renderer.setClearColor(0x000000, 0);
 
   const scene = new THREE.Scene();
-  
-  // Create gradient texture identical to CSS .sky-bg
-  const bgCanvas = document.createElement('canvas');
-  bgCanvas.width = 2; bgCanvas.height = 512;
-  const bgCtx = bgCanvas.getContext('2d');
-  const bgGrad = bgCtx.createLinearGradient(0, 0, 0, 512);
-  bgGrad.addColorStop(0, '#181028');
-  bgGrad.addColorStop(0.4, '#3a2a4b');
-  bgGrad.addColorStop(1, '#5c4068');
-  bgCtx.fillStyle = bgGrad;
-  bgCtx.fillRect(0, 0, 2, 512);
-  const bgTex = new THREE.CanvasTexture(bgCanvas);
-  bgTex.colorSpace = THREE.SRGBColorSpace;
-  scene.background = bgTex;
-  
   scene.fog = new THREE.Fog(0x2a1538, 80, 320);
 
   const camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.1, 600);
@@ -2021,12 +2006,17 @@ document.addEventListener('keydown', (e) => {
     fragmentShader: `
       uniform sampler2D tDiffuse; uniform vec2 uMouse; uniform float uVelocity;
       uniform float uTime; uniform float uAspect; varying vec2 vUv;
+      
+      vec4 LinearTosRGB( in vec4 value ) {
+        return vec4( mix( pow( value.rgb, vec3( 0.41666 ) ) * 1.055 - vec3( 0.055 ), value.rgb * 12.92, vec3( lessThanEqual( value.rgb, vec3( 0.0031308 ) ) ) ), value.a );
+      }
+      
       void main() {
         vec2 uv = vUv; vec2 p = uv - uMouse; p.x *= uAspect;
         float dist = length(p);
         float ripple = sin(dist * 50.0 - uTime * 15.0) * exp(-dist * 8.0) * uVelocity * 0.05;
         vec4 color = texture2D(tDiffuse, uv + normalize(p) * ripple);
-        gl_FragColor = color;
+        gl_FragColor = LinearTosRGB(color);
       }
     `,
     blending: THREE.NoBlending
