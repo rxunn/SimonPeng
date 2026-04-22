@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pei-Hsun Peng — Vertex3D Clone</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,700;1,700&display=swap');
+    
+    body, html {
+      margin: 0; padding: 0; background: #000; color: #fff;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden; height: 500vh;
+      cursor: none;
+    }
+    
+    #threeCanvas {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      z-index: 1; pointer-events: none;
+    }
+    
+    /* Custom Cursor */
+    #custom-cursor {
+      position: fixed; top: 0; left: 0; width: 40px; height: 40px;
+      border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 50%;
+      transform: translate(-50%, -50%); pointer-events: none; z-index: 9999;
+      transition: width 0.2s, height 0.2s, background-color 0.2s;
+    }
+    #custom-cursor-dot {
+      position: fixed; top: 0; left: 0; width: 4px; height: 4px;
+      background: #fff; border-radius: 50%;
+      transform: translate(-50%, -50%); pointer-events: none; z-index: 9999;
+    }
+    
+    /* Header Menu */
+    .header-menu {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 40px 60px; pointer-events: auto;
+    }
+    .logo {
+      font-size: 24px; font-weight: 400; letter-spacing: 0.1em;
+      text-decoration: none; color: #fff; display: flex; align-items: center; gap: 12px;
+    }
+    .logo-v { color: #ff3366; font-weight: 700; font-size: 28px; }
+    
+    .nav-links { display: flex; gap: 40px; }
+    .nav-link {
+      font-size: 13px; font-weight: 700; letter-spacing: 0.2em;
+      text-decoration: none; color: #fff; text-transform: uppercase;
+      transition: color 0.3s; cursor: none;
+    }
+    .nav-link:hover { color: #ff3366; }
+    
+    /* Main Hero Typography */
+    .hero-section {
+      position: fixed; top:0; left:0; width: 100vw; height: 100vh;
+      z-index: 10; display: flex; flex-direction: column; justify-content: flex-end;
+      padding: 60px; pointer-events: none; box-sizing: border-box;
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .hero-title {
+      font-size: clamp(40px, 8vw, 120px); line-height: 0.95;
+      font-weight: 300; letter-spacing: -0.02em; margin: 0 0 20px 0;
+      text-shadow: 0 4px 24px rgba(0,0,0,0.8);
+    }
+    .hero-title strong { font-weight: 700; font-style: italic; }
+    
+    .hero-subtitle {
+      display: flex; align-items: center; gap: 20px;
+      font-size: 16px; font-weight: 300; opacity: 0.8;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+    }
+    .hero-subtitle::before {
+      content: ''; display: block; width: 60px; height: 2px; background: #fff;
+    }
+    
+    /* Scroll Indicator */
+    .scroll-indicator {
+      position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.2em; opacity: 0.6; z-index: 10;
+    }
+    .scroll-arrow {
+      width: 1px; height: 40px; background: linear-gradient(to bottom, #fff, transparent);
+      animation: scrollAnim 2s infinite;
+    }
+    @keyframes scrollAnim {
+      0% { transform: scaleY(0); transform-origin: top; }
+      50% { transform: scaleY(1); transform-origin: top; }
+      50.1% { transform: scaleY(1); transform-origin: bottom; }
+      100% { transform: scaleY(0); transform-origin: bottom; }
+    }
+
+    /* Projects Overlay */
+    .projects-overlay {
+      position: fixed; inset: 0; background: rgba(10, 5, 20, 0.85); backdrop-filter: blur(20px);
+      z-index: 90; display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.5s ease;
+    }
+    .projects-overlay.active { opacity: 1; pointer-events: auto; }
+    .projects-grid {
+      display: flex; gap: 40px; overflow-x: auto; padding: 40px; width: 100vw;
+      align-items: center; scroll-snap-type: x mandatory; scrollbar-width: none;
+    }
+    .project-card {
+      min-width: 300px; height: 450px; background: #111; border: 1px solid rgba(255,255,255,0.1);
+      scroll-snap-align: center; display: flex; flex-direction: column; justify-content: flex-end;
+      padding: 30px; cursor: none; transition: transform 0.4s ease; border-radius: 12px;
+    }
+    .project-card:hover { transform: scale(1.05); border-color: rgba(255,255,255,0.4); }
+    .project-card h3 { font-size: 24px; margin: 0; font-weight: 700; }
+    .project-card p { font-size: 14px; opacity: 0.7; margin-top: 10px; }
+  </style>
+</head>
+<body>
+
+  <!-- STUBS TO PREVENT JS CRASHES -->
+  <div id="scrollHost" style="display:none"></div>
+  <div id="scrubber" style="display:none"><div class="scrubber-rail"></div></div>
+  <div id="scrubberThumb" style="display:none"></div>
+  <div id="scrollCue" style="display:none"></div>
+  <div id="stateMeta" style="display:none"></div>
+  <div id="stateNum" style="display:none"></div>
+  <div id="pedArrows" style="display:none"></div>
+  <div id="pedCardStage" style="display:none"></div>
+  <div id="pedCardStack" style="display:none"></div>
+  <div class="ped-prev" style="display:none"></div>
+  <div class="ped-next" style="display:none"></div>
+
+  <div id="custom-cursor"></div>
+  <div id="custom-cursor-dot"></div>
+
+  <canvas class="three-canvas" id="threeCanvas" aria-hidden="true"></canvas>
+
+  <nav class="header-menu">
+    <a href="#" class="logo">
+      <span class="logo-v">V</span> PEI-HSUN PENG
+    </a>
+    <div class="nav-links">
+      <a href="#" class="nav-link">[ HOME ]</a>
+      <a href="#" class="nav-link" id="btn-projects">[ PROJECTS ]</a>
+      <a href="#" class="nav-link">[ CONTACT ]</a>
+    </div>
+  </nav>
+
+  <div class="hero-section" id="hero">
+    <h1 class="hero-title">THE IMMERSIVE<br><strong>PORTFOLIO</strong> STUDIO</h1>
+    <div class="hero-subtitle">Strategic UX with Real-Time 3D and WebGL.</div>
+  </div>
+
+  <div class="scroll-indicator" id="scrollIndicator">
+    <div class="scroll-arrow"></div>
+    SCROLL TO DISCOVER
+  </div>
+
+  <div class="projects-overlay" id="projectsOverlay">
+    <div class="projects-grid">
+      <div class="project-card"><h3>Digital Twin</h3><p>Real-Time WebGL for Global Energy.</p></div>
+      <div class="project-card"><h3>Virtual Production</h3><p>XR and Unreal Engine integration.</p></div>
+      <div class="project-card"><h3>Product Design</h3><p>End-to-end UX architecture.</p></div>
+      <div class="project-card"><h3>Architecture</h3><p>Spatial interaction models.</p></div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+  <script>
+    // Custom Cursor Logic
+    const cursor = document.getElementById('custom-cursor');
+    const cursorDot = document.getElementById('custom-cursor-dot');
+    let mouseX = window.innerWidth / 2;
+    let mouseY = window.innerHeight / 2;
+    let cursorX = mouseX;
+    let cursorY = mouseY;
+    
+    window.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      cursorDot.style.left = mouseX + 'px';
+      cursorDot.style.top = mouseY + 'px';
+    });
+    
+    function animateCursor() {
+      const dx = mouseX - cursorX;
+      const dy = mouseY - cursorY;
+      cursorX += dx * 0.15;
+      cursorY += dy * 0.15;
+      cursor.style.left = cursorX + 'px';
+      cursor.style.top = cursorY + 'px';
+      requestAnimationFrame(animateCursor);
+    }
+    animateCursor();
+
+    // Hover effects for cursor
+    document.querySelectorAll('a, .project-card').forEach(el => {
+      el.addEventListener('mouseenter', () => {
+        cursor.style.width = '60px';
+        cursor.style.height = '60px';
+        cursor.style.backgroundColor = 'rgba(255,255,255,0.1)';
+      });
+      el.addEventListener('mouseleave', () => {
+        cursor.style.width = '40px';
+        cursor.style.height = '40px';
+        cursor.style.backgroundColor = 'transparent';
+      });
+    });
+
+    // Projects Overlay Logic
+    const btnProjects = document.getElementById('btn-projects');
+    const projectsOverlay = document.getElementById('projectsOverlay');
+    btnProjects.addEventListener('click', (e) => {
+      e.preventDefault();
+      projectsOverlay.classList.toggle('active');
+    });
+    projectsOverlay.addEventListener('click', (e) => {
+      if(e.target === projectsOverlay) projectsOverlay.classList.remove('active');
+    });
+
+    // Lenis Smooth Scroll
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true
+    });
+    function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+    requestAnimationFrame(raf);
+
+    // Scroll opacity mapping for Hero
+    const hero = document.getElementById('hero');
+    const scrollInd = document.getElementById('scrollIndicator');
+    window.addEventListener('scroll', () => {
+      const scrollY = window.scrollY;
+      const opacity = Math.max(0, 1 - scrollY / 500);
+      hero.style.opacity = opacity;
+      hero.style.transform = `translateY(${scrollY * 0.3}px)`;
+      scrollInd.style.opacity = opacity;
+    });
+
+    // Base variables to make extracted Three.js happy
+    const STATES_COUNT = 10;
+    let fracState = 0;
+    function updateScrubberFromFrac(){}
+
+/* ============================================================
+   LANGUAGE TOGGLE
+   ============================================================ */
+const langBtns = document.querySelectorAll('.lang-toggle button');
+const savedLang = localStorage.getItem('lang') || (navigator.language.startsWith('zh') ? 'zh' : 'en');
+setLang(savedLang);
+langBtns.forEach(b => b.addEventListener('click', () => setLang(b.dataset.lang)));
+function setLang(lang){
+  document.body.classList.remove('lang-en','lang-zh');
+  document.body.classList.add('lang-' + lang);
+  document.documentElement.lang = lang === 'zh' ? 'zh-Hant' : 'en';
+  langBtns.forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+  try{localStorage.setItem('lang', lang)}catch(e){}
+}
+
+/* ============================================================
+   STATE MACHINE (snap-scroll, 10 states)
+   ============================================================ */
+const STATES_COUNT = 10;
+let currentState = 0;
+let fracState = 0;          // continuous 0..(N-1), driven by window scroll position
+
+const panels = document.querySelectorAll('.panel');
+const dots = document.querySelectorAll('.side-nav-dot');
+const pedArrows = document.getElementById('pedArrows');
+const pedPrevBtn = document.querySelector('.ped-prev');
+const pedNextBtn = document.querySelector('.ped-next');
+const scrollCue = document.getElementById('scrollCue');
+const stateNum = document.getElementById('stateNum');
+
+const PEDESTAL_TPL_IDS = {4:'apps', 5:'exhibitions', 6:'catalog', 7:'illustration', 8:'video'};
+const pedCardStage = document.getElementById('pedCardStage');
+const pedCardStack = document.getElementById('pedCardStack');
+
+const PEDESTAL_CARD_DATA = {};
+function buildPedestalCardData(){
+  Object.values(PEDESTAL_TPL_IDS).forEach(id => {
+    const tpl = document.getElementById('tpl-' + id);
+    if(!tpl){ PEDESTAL_CARD_DATA[id] = []; return; }
+    const cards = tpl.content.querySelectorAll('.work-card');
+    PEDESTAL_CARD_DATA[id] = Array.from(cards).map(c => {
+      const mediaImg = c.querySelector('.media img');
+      const tagNode = c.querySelector('.info .tag, .tag');
+      const titleNode = c.querySelector('.info h3, h3');
+      const descNode = c.querySelector('.info .desc, .desc, .info p');
+      return {
+        video: c.dataset.video || '',
+        image: c.dataset.image || '',
+        href: c.getAttribute && c.getAttribute('href') || '',
+        poster: mediaImg ? mediaImg.getAttribute('src') : '',
+        tagHTML: tagNode ? tagNode.innerHTML : '',
+        titleHTML: titleNode ? titleNode.innerHTML : '',
+        descHTML: descNode ? descNode.innerHTML : '',
+      };
+    });
+  });
+}
+buildPedestalCardData();
+
+let currentCardSet = [];
+let currentCardIdx = 0;
+
+function openCardAction(card){
+  if(!card) return;
+  if(card.href){ window.open(card.href, '_blank', 'noopener'); return; }
+  if(card.video){
+    modalVideo.src = card.video;
+    videoModal.classList.add('open');
+    modalVideo.play().catch(()=>{});
+  } else if(card.image || card.poster){
+    modalImage.src = card.image || card.poster;
+    imageModal.classList.add('open');
+  }
+}
+
+const CARD_STEP = 72;       // degrees between adjacent cards
+const CARD_VISIBLE_RANGE = 2; // show cards within ±2 slots (front + neighbors)
+function getCardRadius(){
+  const w = window.innerWidth;
+  if(w <= 380) return 130;
+  if(w <= 640) return 150;
+  if(w <= 980) return 190;
+  return 230;
+}
+
+function buildCarousel(){
+  pedCardStack.innerHTML = '';
+  const N = currentCardSet.length;
+  if(!N) return;
+  currentCardSet.forEach((card, i) => {
+    const div = document.createElement('div');
+    div.className = 'ped-card-float';
+    div.dataset.idx = i;
+    if(card.video) div.classList.add('has-video');
+    if(card.href) div.classList.add('has-link');
+    div.innerHTML = `
+      <div class="ped-card-media">${card.poster ? `<img src="${card.poster}" alt="" />` : ''}</div>
+      <div class="ped-card-grad"></div>
+      <div class="ped-card-counter">${String(i+1).padStart(2,'0')} / ${String(N).padStart(2,'0')}</div>
+      <div class="ped-card-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div>
+      <div class="ped-card-zoom"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></div>
+      <div class="ped-card-body">
+        <span class="tag">${card.tagHTML}</span>
+        <h4>${card.titleHTML}</h4>
+        <p>${card.descHTML}</p>
+      </div>
+    `;
+
+    // snap to initial position without animation
+    div.style.transition = 'none';
+    placeCard(div, i);
+    void div.offsetWidth;
+    div.style.transition = '';
+    pedCardStack.appendChild(div);
+  });
+  updateCardPositions();
+}
+
+pedCardStage.addEventListener('pointerup', (e) => {
+  if(!currentCardSet || currentCardSet.length === 0) return;
+  const rect = pedCardStage.getBoundingClientRect();
+  const cx = rect.left + 300;
+  const cy = rect.top + 300;
+  const dx = e.clientX - cx;
+  const dy = e.clientY - cy;
+  
+  if(Math.abs(dx) < 140 && Math.abs(dy) < 180) {
+    openCardAction(currentCardSet[currentCardIdx]);
+  } else if(dx > 140 && dx < 300 && Math.abs(dy) < 180) {
+    cardNext();
+  } else if(dx < -140 && dx > -300 && Math.abs(dy) < 180) {
+    cardPrev();
+  }
+});
+
+// signed shortest-path distance from currentCardIdx to i, wrapped mod N
+function signedDistance(i){
+  const N = currentCardSet.length;
+  let d = i - currentCardIdx;
+  if(d > N/2) d -= N;
+  if(d <= -N/2) d += N;
+  return d;
+}
+
+function placeCard(el, i){
+  const d = signedDistance(i);
+  const angle = d * CARD_STEP;
+  el.style.transform = `rotateY(${angle}deg) translateZ(${getCardRadius()}px)`;
+  el.classList.toggle('is-front', d === 0);
+  // hide cards that are past the visible arc so they don't flash on the opposite side
+  const vis = Math.abs(d) <= CARD_VISIBLE_RANGE;
+  el.style.visibility = vis ? 'visible' : 'hidden';
+}
+
+function updateCardPositions(){
+  Array.from(pedCardStack.children).forEach((el, i) => placeCard(el, i));
+}
+window.addEventListener('resize', () => updateCardPositions(), {passive:true});
+window.addEventListener('orientationchange', () => setTimeout(updateCardPositions, 140), {passive:true});
+
+function renderPedestalCard(){
+  if(!currentCardSet.length){ pedCardStage.classList.remove('visible'); return; }
+  updateCardPositions();
+}
+
+
+  // Scroll cue: hide when past intro
+  scrollCue.classList.toggle('hide', n !== 0);
+
+  // State meta (1-indexed display)
+  stateNum.textContent = String(n + 1).padStart(2, '0');
+
+  // Scrubber
+  updateScrubber(n);
+
+  // Camera is driven directly by window.scrollY (see bindScrollDriver) — no
+  // per-state camera nudging needed here.
+}
+
+/* ---------------- SCROLL → CAMERA DRIVER ----------------
+   Each state occupies one "segment" (1 segment = 1.4 × viewport height, set
+   in CSS as --seg-h). window.scrollY / segHeight gives a continuous
+   fractional state index 0..(N-1) that drives the camera each frame, and
+   CSS scroll-snap gently lands the viewport on state boundaries when the
+   user stops scrolling. Net result: smooth continuous camera motion as you
+   scroll, stable resting positions. */
+(function buildScrollSections(){
+  const host = document.getElementById('scrollHost');
+  for(let i = 0; i < STATES_COUNT; i++){
+    const s = document.createElement('div');
+    s.className = 'scroll-section';
+    s.dataset.state = i;
+    host.appendChild(s);
+  }
+})();
+function getSegHeight(){
+  // Mirrors the --seg-h CSS variable (140vh desktop, 130vh phones)
+  return (window.innerWidth <= 640 ? 1.30 : 1.40) * window.innerHeight;
+}
+function progressToScrollY(frac){
+  return frac * getSegHeight();
+}
+function onScroll(){
+  const seg = getSegHeight();
+  const frac = Math.max(0, Math.min(STATES_COUNT - 1, window.scrollY / seg));
+  fracState = frac;
+  const rounded = Math.round(frac);
+  updateScrubberFromFrac(frac);
+}
+window.addEventListener('scroll', onScroll, {passive:true});
+window.addEventListener('resize', onScroll, {passive:true});
+
+/* ---------------- SMOOTH WHEEL SCROLL + AUTO-SNAP ----------------
+   Custom physics scroll that feels smooth, but automatically 
+   snaps to the exact state boundary when scrolling stops. */
+let scrollTargetY = 0;
+let scrollSmoothActive = false;
+let scrollSnapTimer = null;
+
+function maxScrollY(){
+  return Math.max(0, (document.documentElement.scrollHeight || document.body.scrollHeight) - window.innerHeight);
+}
+
+
+window.addEventListener('wheel', (e) => {
+  if(anyModalOpen()) return;
+  e.preventDefault();
+  
+  if(!scrollSmoothActive) {
+    scrollTargetY = window.scrollY;
+  }
+  
+  // Apply scroll delta
+  let dy = e.deltaY;
+  if(e.deltaMode === 1) dy *= 16;
+  else if(e.deltaMode === 2) dy *= window.innerHeight;
+  
+  scrollTargetY = Math.max(0, Math.min(maxScrollY(), scrollTargetY + dy));
+  scrollSmoothActive = true;
+  
+  // Debounce the snap logic
+  clearTimeout(scrollSnapTimer);
+  scrollSnapTimer = setTimeout(() => {
+    // User stopped scrolling. Find nearest state and snap!
+    const seg = getSegHeight();
+    const nearestState = Math.round(scrollTargetY / seg);
+    scrollTargetY = Math.max(0, Math.min(maxScrollY(), nearestState * seg));
+  }, 350);
+  
+}, {passive:false});
+
+window.addEventListener('touchstart', () => {
+  // Hand control back to native scrolling / CSS scroll-snap
+  scrollSmoothActive = false;
+  clearTimeout(scrollSnapTimer);
+}, {passive:true});
+
+function smoothScrollTick(dt) {
+  if(!scrollSmoothActive) return;
+  const cur = window.scrollY;
+  const delta = scrollTargetY - cur;
+  
+  if(Math.abs(delta) < 0.5){
+    if(cur !== scrollTargetY) window.scrollTo(0, scrollTargetY);
+    scrollSmoothActive = false;
+    return;
+  }
+  
+  // Exponential decay smoothing (feels like Lenis inertia)
+  // A time constant of 0.15 gives a crisp, responsive feel.
+  const k = 1 - Math.exp(-dt / 0.15);
+  window.scrollTo(0, cur + delta * k);
+}
+
+/* ---------------- SCRUBBER (native-style draggable scrollbar) ---------------- */
+const scrubberEl = document.getElementById('scrubber');
+const scrubberThumb = document.getElementById('scrubberThumb');
+const scrubberRail = scrubberEl.querySelector('.scrubber-rail');
+function updateScrubberFromFrac(frac){
+  const railH = scrubberRail.clientHeight;
+  const thumbH = scrubberThumb.offsetHeight || 80;
+  const travel = Math.max(0, railH - thumbH);
+  const progress = frac / (STATES_COUNT - 1);
+  scrubberThumb.style.top = (progress * travel) + 'px';
+  scrubberEl.setAttribute('aria-valuenow', String(Math.round(frac) + 1));
+}
+function updateScrubber(n){ updateScrubberFromFrac(n); }
+window.addEventListener('resize', () => updateScrubberFromFrac(fracState), {passive:true});
+(function bindScrubberDrag(){
+  let dragging = false;
+  function scrollFromClientY(y){
+    const rect = scrubberRail.getBoundingClientRect();
+    const thumbH = scrubberThumb.offsetHeight || 80;
+    const travel = Math.max(1, rect.height - thumbH);
+    const f = Math.max(0, Math.min(1, (y - rect.top - thumbH / 2) / travel));
+    window.scrollTo({top: progressToScrollY(f * (STATES_COUNT - 1)), behavior: 'auto'});
+  }
+  function onMove(y){ if(dragging) scrollFromClientY(y); }
+  function onDown(e){
+    dragging = true;
+    scrollSmoothActive = false; // cancel any in-flight smooth wheel animation
+    scrubberEl.classList.add('dragging');
+    scrollFromClientY(e.clientY);
+    e.preventDefault();
+  }
+  function onUp(){
+    if(!dragging) return;
+    dragging = false;
+    scrubberEl.classList.remove('dragging');
+  }
+  scrubberEl.addEventListener('pointerdown', (e) => { onDown(e); try{ scrubberEl.setPointerCapture(e.pointerId); }catch{} });
+  scrubberEl.addEventListener('pointermove', (e) => onMove(e.clientY));
+  scrubberEl.addEventListener('pointerup', onUp);
+  scrubberEl.addEventListener('pointercancel', onUp);
+})();
+
+
+
+function cardPrev(){
+  if(!currentCardSet.length) return;
+  currentCardIdx = (currentCardIdx - 1 + currentCardSet.length) % currentCardSet.length;
+  renderPedestalCard('prev');
+}
+function cardNext(){
+  if(!currentCardSet.length) return;
+  currentCardIdx = (currentCardIdx + 1) % currentCardSet.length;
+  renderPedestalCard('next');
+}
+
+
+/* Scroll-driven model: wheel/touch are handled natively by the browser, so
+   we don't intercept them. Keyboard + dot clicks + "goto" links smooth-scroll
+   to the matching state position. */
+function scrollToState(n, smooth){
+  n = Math.max(0, Math.min(STATES_COUNT - 1, n));
+  window.scrollTo({top: progressToScrollY(n), behavior: smooth === false ? 'auto' : 'smooth'});
+}
+window.addEventListener('keydown', (e) => {
+  if(document.getElementById('detailModal').classList.contains('open')) return;
+  if(e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === 'ArrowRight' || e.key === ' '){
+    e.preventDefault(); scrollToState(Math.round(fracState) + 1);
+  } else if(e.key === 'ArrowUp' || e.key === 'PageUp' || e.key === 'ArrowLeft'){
+    e.preventDefault(); scrollToState(Math.round(fracState) - 1);
+  } else if(e.key === 'Home'){
+    e.preventDefault(); scrollToState(0);
+  } else if(e.key === 'End'){
+    e.preventDefault(); scrollToState(STATES_COUNT - 1);
+  }
+});
+
+/* Pedestal arrows — cycle cards within current pedestal */
+pedPrevBtn.addEventListener('click', cardPrev);
+pedNextBtn.addEventListener('click', cardNext);
+
+/* Side nav dots */
+dots.forEach(d => d.addEventListener('click', () => scrollToState(parseInt(d.dataset.idx, 10))));
+
+/* Header "goto" links */
+document.querySelectorAll('[data-goto]').forEach(el => {
+  el.addEventListener('click', (e) => {
+    e.preventDefault();
+    scrollToState(parseInt(el.dataset.goto, 10));
+  });
+});
+
+/* ============================================================
+   DETAIL MODAL — pedestal card expansion
+   ============================================================ */
+const detailModal = document.getElementById('detailModal');
+const detailContent = document.getElementById('detailContent');
+const detailBack = document.getElementById('detailBack');
+
+detailBack.addEventListener('click', closeDetail);
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape'){
+    if(detailModal.classList.contains('open') &&
+       !document.getElementById('videoModal').classList.contains('open') &&
+       !document.getElementById('imageModal').classList.contains('open')){
+      closeDetail();
+    }
+  }
+});
+
+/* (Pedestal cards open directly via floating-card click — no expand buttons) */
+
+/* ============================================================
+   WORK CARDS inside detail modal — video & image overlays
+   ============================================================ */
+const videoModal = document.getElementById('videoModal');
+const modalVideo = document.getElementById('modalVideo');
+const imageModal = document.getElementById('imageModal');
+const modalImage = document.getElementById('modalImage');
+
+function wireDetailCards(){
+  detailContent.querySelectorAll('.work-card').forEach(card => {
+    const videoSrc = card.dataset.video;
+    const imageSrc = card.dataset.image;
+    if(!videoSrc && !imageSrc) return;
+    card.addEventListener('click', (e) => {
+      if(e.target.closest('a')) return;
+      if(videoSrc){
+        modalVideo.src = videoSrc;
+        videoModal.classList.add('open');
+        modalVideo.play().catch(()=>{});
+      } else if(imageSrc){
+        modalImage.src = imageSrc;
+        imageModal.classList.add('open');
+      }
+    });
+  });
+}
+document.querySelectorAll('.modal').forEach(m => {
+  m.addEventListener('click', (e) => { if(e.target === m) closeWorkModals(); });
+});
+document.querySelectorAll('.modal-close').forEach(b => b.addEventListener('click', closeWorkModals));
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape' && (videoModal.classList.contains('open') || imageModal.classList.contains('open'))){
+    closeWorkModals();
+  }
+});
+
+/* ============================================================
+   THREE.JS SCENE — desert + white modernist building + pedestals + particles
+   ============================================================ */
+(function(){
+  if(typeof THREE === 'undefined'){ hideLoading(); return; }
+  const canvas = document.getElementById('threeCanvas');
+  if(!canvas){ hideLoading(); return; }
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const isMobile = window.innerWidth < 720;
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile, alpha: true, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2));
+  renderer.setClearColor(0x000000, 0);
+
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.Fog(0x2a1538, 80, 320);
+
+  const camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.1, 600);
+  camera.position.set(70, 50, 110);
+  camera.lookAt(0, 12, 0);
+
+  function resize(){
+    const w = window.innerWidth, h = window.innerHeight;
+    renderer.setSize(w, h, false);
+    const aspect = w / h;
+    camera.aspect = aspect;
+    // Widen FOV on narrow/portrait viewports so the scene doesn't clip into walls.
+    // Base vertical FOV 52°; scale up as aspect narrows, capped at 88°.
+    const baseFov = 52;
+    const fov = aspect < 1 ? Math.min(88, baseFov / Math.max(aspect, 0.42)) : baseFov;
+    camera.fov = fov;
+    camera.updateProjectionMatrix();
+  }
+  resize();
+  window.addEventListener('resize', resize, {passive:true});
+  window.addEventListener('orientationchange', () => setTimeout(resize, 120), {passive:true});
+
+  /* ---------------- GROUND (desert) ---------------- */
+  function makeGroundTexture(){
+    const s = 1024;
+    const c = document.createElement('canvas');
+    c.width = c.height = s;
+    const g = c.getContext('2d');
+    // base color
+    g.fillStyle = '#5a4a5c';
+    g.fillRect(0, 0, s, s);
+    // warm patches
+    for(let i = 0; i < 80; i++){
+      const x = Math.random() * s, y = Math.random() * s;
+      const r = 40 + Math.random() * 180;
+      const sg = g.createRadialGradient(x, y, 0, x, y, r);
+      sg.addColorStop(0, `rgba(${160+Math.random()*60},${100+Math.random()*50},${120+Math.random()*60},${0.12 + Math.random()*0.18})`);
+      sg.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = sg;
+      g.beginPath(); g.arc(x, y, r, 0, Math.PI*2); g.fill();
+    }
+    // dark patches
+    for(let i = 0; i < 60; i++){
+      const x = Math.random() * s, y = Math.random() * s;
+      const r = 30 + Math.random() * 120;
+      const sg = g.createRadialGradient(x, y, 0, x, y, r);
+      sg.addColorStop(0, `rgba(40,20,45,${0.1 + Math.random()*0.22})`);
+      sg.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = sg;
+      g.beginPath(); g.arc(x, y, r, 0, Math.PI*2); g.fill();
+    }
+    // speckle noise
+    for(let i = 0; i < 4000; i++){
+      const v = Math.floor(60 + Math.random()*80);
+      g.fillStyle = `rgba(${v},${v-15},${v+10},${0.08+Math.random()*0.1})`;
+      g.fillRect(Math.random()*s, Math.random()*s, 1 + Math.random()*2, 1 + Math.random()*2);
+    }
+    const tex = new THREE.CanvasTexture(c);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(4, 4);
+    return tex;
+  }
+  const groundTex = makeGroundTexture();
+  const groundGeo = new THREE.PlaneGeometry(600, 600, 48, 48);
+  // add gentle height variation
+  const gPos = groundGeo.attributes.position;
+  for(let i = 0; i < gPos.count; i++){
+    const x = gPos.getX(i), y = gPos.getY(i);
+    const d = Math.sqrt(x*x + y*y);
+    // leave flat near building center
+    const flatness = Math.max(0, Math.min(1, (d - 45) / 80));
+    const h = flatness * (Math.sin(x * 0.04) * Math.cos(y * 0.05) * 2.2 + Math.sin(x * 0.1 + y * 0.08) * 0.6);
+    gPos.setZ(i, h);
+  }
+  groundGeo.computeVertexNormals();
+  const groundMat = new THREE.MeshStandardMaterial({ map: groundTex, roughness: 0.95, metalness: 0.02, color: 0x806070 });
+  const ground = new THREE.Mesh(groundGeo, groundMat);
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -0.05;
+  ground.receiveShadow = false;
+  scene.add(ground);
+
+  /* ---------------- ROCKS (scattered low-poly) ---------------- */
+  const rockGeo1 = new THREE.DodecahedronGeometry(1, 0);
+  const rockGeo2 = new THREE.IcosahedronGeometry(1, 0);
+  const rockMat = new THREE.MeshStandardMaterial({ color: 0x4a3845, roughness: 1.0, metalness: 0.05, flatShading: true });
+  const rockMatLight = new THREE.MeshStandardMaterial({ color: 0x6a5060, roughness: 1.0, metalness: 0.05, flatShading: true });
+
+  function addRock(x, z, scale, dark){
+    const geo = Math.random() > 0.5 ? rockGeo1 : rockGeo2;
+    const m = new THREE.Mesh(geo, dark ? rockMat : rockMatLight);
+    m.position.set(x, scale * 0.5, z);
+    m.scale.set(scale * (0.7 + Math.random()*0.7), scale * (0.5 + Math.random()*0.6), scale * (0.7 + Math.random()*0.7));
+    m.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, Math.random()*Math.PI);
+    scene.add(m);
+  }
+  // scatter rocks in a ring around the building (not inside)
+  for(let i = 0; i < (isMobile ? 22 : 40); i++){
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 50 + Math.random() * 130;
+    const x = Math.cos(angle) * dist;
+    const z = Math.sin(angle) * dist;
+    const s = 2 + Math.random() * 7;
+    addRock(x, z, s, Math.random() > 0.5);
+  }
+  // a few large rocks further out
+  for(let i = 0; i < 6; i++){
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 130 + Math.random() * 80;
+    addRock(Math.cos(angle)*dist, Math.sin(angle)*dist, 8 + Math.random()*6, true);
+  }
+
+  /* ---------------- BUILDING (white modernist, hollow) ----------------
+     Coordinates: building centered at (0, 0, 0). Floor y=0, ceiling y=18.
+     Inside dimensions: X in [-20, 20], Z in [-18, 18].
+     Door on front (+Z face) — gap from x=-5 to x=5, y=0 to y=14.
+  */
+  const building = new THREE.Group();
+  const WALL_T = 0.6; // wall thickness
+  const INTERIOR_W = 40; // x
+  const INTERIOR_D = 36; // z
+  const INTERIOR_H = 18; // y
+
+  const wallMatOuter = new THREE.MeshStandardMaterial({ color: 0xeeeae2, roughness: 0.65, metalness: 0.05, side: THREE.DoubleSide });
+  const wallMatInner = new THREE.MeshStandardMaterial({ color: 0xe0dcd2, roughness: 0.7, metalness: 0.05, side: THREE.DoubleSide });
+
+  function addWall(w, h, d, x, y, z, mat){
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat || wallMatOuter);
+    m.position.set(x, y, z);
+    building.add(m);
+    return m;
+  }
+
+  // Floor
+  addWall(INTERIOR_W + 4, WALL_T, INTERIOR_D + 4, 0, -WALL_T/2, 0, new THREE.MeshStandardMaterial({ color: 0xbfb8ae, roughness: 0.85 }));
+  // Ceiling
+  addWall(INTERIOR_W + 4, WALL_T, INTERIOR_D + 4, 0, INTERIOR_H + WALL_T/2, 0);
+  // Back wall (z = -INTERIOR_D/2)
+  addWall(INTERIOR_W + 4, INTERIOR_H, WALL_T, 0, INTERIOR_H/2, -INTERIOR_D/2 - WALL_T/2);
+  // Left wall (x = -INTERIOR_W/2)
+  addWall(WALL_T, INTERIOR_H, INTERIOR_D + 4, -INTERIOR_W/2 - WALL_T/2, INTERIOR_H/2, 0);
+  // Right wall (x = +INTERIOR_W/2)
+  addWall(WALL_T, INTERIOR_H, INTERIOR_D + 4, INTERIOR_W/2 + WALL_T/2, INTERIOR_H/2, 0);
+  // Front wall — three segments around door opening (door: x[-5,5], y[0,14])
+  // Left front: x from -INTERIOR_W/2-WALL_T to -5, width = (INTERIOR_W/2+WALL_T) - 5 = 15.3
+  const frontW = (INTERIOR_W + 4) / 2 - 5; // width of each side panel
+  addWall(frontW, INTERIOR_H, WALL_T, -(5 + frontW/2), INTERIOR_H/2, INTERIOR_D/2 + WALL_T/2);
+  addWall(frontW, INTERIOR_H, WALL_T, (5 + frontW/2), INTERIOR_H/2, INTERIOR_D/2 + WALL_T/2);
+  // Lintel above door: x[-5,5], y[14,18]
+  addWall(10, 4, WALL_T, 0, 16, INTERIOR_D/2 + WALL_T/2);
+
+  // Cantilevered upper block (architectural accent on back-left)
+  const upperBlockMat = new THREE.MeshStandardMaterial({ color: 0xe6e1d8, roughness: 0.6, metalness: 0.06 });
+  const upperBlock = new THREE.Mesh(new THREE.BoxGeometry(22, 10, 24), upperBlockMat);
+  upperBlock.position.set(-8, INTERIOR_H + 5.5, -8);
+  building.add(upperBlock);
+
+  // Accent block on top-right
+  const accentBlock = new THREE.Mesh(new THREE.BoxGeometry(12, 6, 12), upperBlockMat);
+  accentBlock.position.set(10, INTERIOR_H + 3.5, 6);
+  building.add(accentBlock);
+
+  // Low wing extending front-right
+  const wingMat = new THREE.MeshStandardMaterial({ color: 0xd8d3c8, roughness: 0.7 });
+  const wing = new THREE.Mesh(new THREE.BoxGeometry(18, 7, 14), wingMat);
+  wing.position.set(INTERIOR_W/2 + 9, 3.5, 14);
+  building.add(wing);
+
+  // Entry plinth / step in front of door
+  const stepMat = new THREE.MeshStandardMaterial({ color: 0xc0b8ae, roughness: 0.8 });
+  const step = new THREE.Mesh(new THREE.BoxGeometry(18, 0.8, 6), stepMat);
+  step.position.set(0, 0.4, INTERIOR_D/2 + 4);
+  building.add(step);
+
+  scene.add(building);
+
+  /* ---------------- PEDESTALS (5 inside, ringed around room — clockwise right-turn order) ---------------- */
+  const PEDESTAL_COLORS = [0xf0a5c8, 0xb993ff, 0x86b9ff, 0xfbd68e, 0x86ffb0];
+  const PEDESTAL_POS = [
+    new THREE.Vector3( 15, 0,  2),   // P1 Apps — right wall, near front
+    new THREE.Vector3( 14, 0, -12),  // P2 Exhibitions — back-right corner
+    new THREE.Vector3(  0, 0, -15),  // P3 Catalog — back wall center
+    new THREE.Vector3(-14, 0, -12),  // P4 Illustration — back-left corner
+    new THREE.Vector3(-15, 0,  2),   // P5 Video — left wall, near front
+  ];
+  const pedestals = [];
+  PEDESTAL_POS.forEach((pos, i) => {
+    const color = PEDESTAL_COLORS[i];
+    const g = new THREE.Group();
+    g.position.copy(pos);
+    // orient booth's long side to face the room center
+    g.rotation.y = Math.atan2(pos.x, pos.z);
+
+    // rectangular booth base (light modernist body)
+    const base = new THREE.Mesh(
+      new THREE.BoxGeometry(9, 4.2, 4.2),
+      new THREE.MeshStandardMaterial({ color: 0xe8e2ee, roughness: 0.42, metalness: 0.15, emissive: new THREE.Color(color), emissiveIntensity: 0.08 })
+    );
+    base.position.y = 2.1;
+    g.add(base);
+
+    // bottom backlit strip (underglow, alias disc for animation reuse)
+    const disc = new THREE.Mesh(
+      new THREE.BoxGeometry(9.18, 0.26, 4.38),
+      new THREE.MeshStandardMaterial({ color: new THREE.Color(color), emissive: new THREE.Color(color), emissiveIntensity: 1.2, roughness: 0.35, metalness: 0.4 })
+    );
+    disc.position.y = 0.16;
+    g.add(disc);
+
+    // top accent line (where cards "rise" from)
+    const topLine = new THREE.Mesh(
+      new THREE.BoxGeometry(9.08, 0.1, 4.26),
+      new THREE.MeshBasicMaterial({ color: new THREE.Color(color), transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending })
+    );
+    topLine.position.y = 4.26;
+    g.add(topLine);
+
+    // soft column of light rising from booth top
+    const beamGeo = new THREE.CylinderGeometry(0.3, 3.6, 11, 16, 1, true);
+    const beamMat = new THREE.ShaderMaterial({
+      uniforms: { uTime:{value:0}, uColor:{value:new THREE.Color(color)} },
+      vertexShader: `varying float vY; void main(){ vY = position.y; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.); }`,
+      fragmentShader: `uniform float uTime; uniform vec3 uColor; varying float vY;
+        void main(){ float t = (vY + 5.0) / 10.0; float a = pow(1.0 - t, 1.4) * (0.3 + 0.18 * sin(uTime*2.0 + vY*0.4)); gl_FragColor = vec4(uColor, a * 0.4); }`,
+      transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide
+    });
+    const beam = new THREE.Mesh(beamGeo, beamMat);
+    beam.position.y = 9.8;
+    g.add(beam);
+
+    // floor halo under the booth
+    const ring = new THREE.Mesh(
+      new THREE.PlaneGeometry(11, 6.4),
+      new THREE.MeshBasicMaterial({ color: new THREE.Color(color), transparent: true, opacity: 0.32, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false })
+    );
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.y = 0.02;
+    g.add(ring);
+
+    // point light for glow
+    const pl = new THREE.PointLight(color, 1.4, 32);
+    pl.position.y = 5.2;
+    g.add(pl);
+
+    scene.add(g);
+    pedestals.push({ group: g, disc, beam, ring, light: pl });
+  });
+
+  /* ---------------- PARTICLES (pink/cyan drift) ---------------- */
+  function makeParticleTexture(){
+    const s = 64;
+    const c = document.createElement('canvas');
+    c.width = c.height = s;
+    const g = c.getContext('2d');
+    const grad = g.createRadialGradient(s/2, s/2, 0, s/2, s/2, s/2);
+    grad.addColorStop(0, 'rgba(255,255,255,1)');
+    grad.addColorStop(0.25, 'rgba(255,255,255,0.6)');
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = grad; g.fillRect(0, 0, s, s);
+    const t = new THREE.CanvasTexture(c);
+    return t;
+  }
+  const partTex = makeParticleTexture();
+
+  function buildParticles(count, range){
+    const geo = new THREE.BufferGeometry();
+    const pos = new Float32Array(count * 3);
+    const col = new Float32Array(count * 3);
+    const siz = new Float32Array(count);
+    const vel = new Float32Array(count); // vertical speed
+    for(let i = 0; i < count; i++){
+      pos[i*3]   = (Math.random() - 0.5) * range;
+      pos[i*3+1] = Math.random() * 40 + 2;
+      pos[i*3+2] = (Math.random() - 0.5) * range;
+      const p = Math.random();
+      if(p < 0.55){ col[i*3]=1; col[i*3+1]=0.7; col[i*3+2]=0.85; }
+      else if(p < 0.85){ col[i*3]=0.55; col[i*3+1]=0.75; col[i*3+2]=1; }
+      else { col[i*3]=1; col[i*3+1]=0.9; col[i*3+2]=0.75; }
+      siz[i] = 1.5 + Math.random() * 3.5;
+      vel[i] = 0.5 + Math.random() * 1.2;
+    }
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    geo.setAttribute('size', new THREE.BufferAttribute(siz, 1));
+    geo.setAttribute('vel', new THREE.BufferAttribute(vel, 1));
+    const mat = new THREE.ShaderMaterial({
+      uniforms: { uTime:{value:0}, uTex:{value:partTex} },
+      vertexShader: `
+        attribute float size;
+        varying vec3 vColor;
+        uniform float uTime;
+        void main(){
+          vColor = color;
+          vec4 mv = modelViewMatrix * vec4(position, 1.0);
+          float tw = 0.65 + 0.35 * sin(uTime * 2.0 + position.x * 0.3 + position.z * 0.3);
+          gl_PointSize = size * tw * (280.0 / max(-mv.z, 1.0));
+          gl_Position = projectionMatrix * mv;
+        }
+      `,
+      fragmentShader: `
+        uniform sampler2D uTex;
+        varying vec3 vColor;
+        void main(){
+          vec4 t = texture2D(uTex, gl_PointCoord);
+          if(t.a < 0.02) discard;
+          gl_FragColor = vec4(vColor, 1.0) * t;
+        }
+      `,
+      vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+    });
+    return new THREE.Points(geo, mat);
+  }
+  const particles = buildParticles(isMobile ? 1200 : 2400, 260);
+  scene.add(particles);
+
+  /* ---------------- LIGHTS ---------------- */
+  scene.add(new THREE.HemisphereLight(0xd6c6e8, 0x3a2040, 0.6));
+  const sun = new THREE.DirectionalLight(0xfff0d8, 0.95);
+  sun.position.set(80, 120, 50);
+  scene.add(sun);
+  const fill = new THREE.DirectionalLight(0x9bb0ff, 0.3);
+  fill.position.set(-90, 60, -40);
+  scene.add(fill);
+  // interior light (fills inside the building)
+  const interiorLight = new THREE.PointLight(0xffe4f0, 1.6, 60);
+  interiorLight.position.set(0, 14, 0);
+  scene.add(interiorLight);
+
+  /* ---------------- LIQUID POST-PROCESSING (Vertex3D Style) ---------------- */
+  const renderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, {
+    minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat
+  });
+  const orthoCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  const orthoScene = new THREE.Scene();
+  const liquidShader = new THREE.ShaderMaterial({
+    uniforms: {
+      tDiffuse: { value: renderTarget.texture },
+      uMouse: { value: new THREE.Vector2(0.5, 0.5) },
+      uVelocity: { value: 0 },
+      uTime: { value: 0 },
+      uAspect: { value: window.innerWidth / window.innerHeight }
+    },
+    vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position, 1.0); }`,
+    fragmentShader: `
+      uniform sampler2D tDiffuse; uniform vec2 uMouse; uniform float uVelocity;
+      uniform float uTime; uniform float uAspect; varying vec2 vUv;
+      
+      void main() {
+        vec2 uv = vUv; vec2 p = uv - uMouse; p.x *= uAspect;
+        float dist = length(p);
+        float ripple = sin(dist * 50.0 - uTime * 15.0) * exp(-dist * 8.0) * uVelocity * 0.05;
+        vec4 color = texture2D(tDiffuse, uv + normalize(p) * ripple);
+        gl_FragColor = color;
+        #include <colorspace_fragment>
+      }
+    `,
+    blending: THREE.NoBlending
+  });
+  const orthoQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), liquidShader);
+  orthoScene.add(orthoQuad);
+
+  let targetMouse = new THREE.Vector2(0.5, 0.5), currentMouse = new THREE.Vector2(0.5, 0.5);
+  let mouseSpeed = 0;
+  window.addEventListener('pointermove', (e) => {
+    targetMouse.x = e.clientX / window.innerWidth;
+    targetMouse.y = 1.0 - (e.clientY / window.innerHeight);
+  }, {passive:true});
+  window.addEventListener('resize', () => {
+    renderTarget.setSize(window.innerWidth, window.innerHeight);
+    liquidShader.uniforms.uAspect.value = window.innerWidth / window.innerHeight;
+  });
+
+  /* ---------------- CAMERA KEYFRAMES ----------------
+     Building center at (0,0,0). Interior: x[-20,20], z[-18,18], y=0..18.
+     States 4-8 = rotating clockwise around pedestal ring; camera stays near room-center.
+  */
+  const pedLook = (p, y = 5.5) => [p.x, y, p.z];
+
+  const CAM_STATES = [
+    // 0 — Intro: far front, elevated, wide
+    { pos: [58, 40, 115], look: [0, 12, 0] },
+    // 1 — Above right side of building, elevated
+    { pos: [88, 48, 34], look: [0, 14, 0] },
+    // 2 — Directly behind building
+    { pos: [0, 30, -92], look: [0, 14, 0] },
+    // 3 — Approaching front door, lower angle
+    { pos: [0, 9, 46], look: [0, 5, 0] },
+    // 4 — Inside, turned RIGHT to face P1 (right wall)
+    { pos: [3, 9, 2],    look: pedLook(PEDESTAL_POS[0]) },
+    // 5 — Pulled back & rotated further right to P2 (back-right corner)
+    { pos: [4, 9, -6],   look: pedLook(PEDESTAL_POS[1]) },
+    // 6 — Pivoted further clockwise to P3 (back wall center)
+    { pos: [0, 9, -4],   look: pedLook(PEDESTAL_POS[2]) },
+    // 7 — Continued clockwise to P4 (back-left corner)
+    { pos: [-4, 9, -6],  look: pedLook(PEDESTAL_POS[3]) },
+    // 8 — Final clockwise to P5 (left wall)
+    { pos: [-3, 9, 2],   look: pedLook(PEDESTAL_POS[4]) },
+    // 9 — Contact: return toward center, elevated looking into room
+    { pos: [0, 11, 10],  look: [0, 5, -8] },
+  ];
+
+  /* Camera sampling: each segment between state i and i+1 is either a
+     CatmullRom spline (if TRANSITION_VIAS has an entry) or a straight lerp.
+     The render loop samples at fracState, which is recomputed from
+     window.scrollY every frame. Scroll faster -> camera moves faster, 1:1. */
+  const camCurPos = new THREE.Vector3(...CAM_STATES[0].pos);
+  const camCurLook = new THREE.Vector3(...CAM_STATES[0].look);
+
+  const TRANSITION_VIAS = {
+    '2->3': {
+      pos:  [[70, 36, -80], [130, 26, -10], [95, 16, 60]],
+      look: [[0, 12, 0],    [0, 10, 8],      [0, 6, 20]],
+    },
+  };
+
+  // Build one curve per segment (or null for linear)
+  const SEGMENT_CURVES = [];
+  for(let i = 0; i < STATES_COUNT - 1; i++){
+    const via = TRANSITION_VIAS[i + '->' + (i+1)];
+    if(via){
+      const pts = [new THREE.Vector3(...CAM_STATES[i].pos),
+        ...via.pos.map(p => new THREE.Vector3(p[0], p[1], p[2])),
+        new THREE.Vector3(...CAM_STATES[i+1].pos)];
+      const lks = [new THREE.Vector3(...CAM_STATES[i].look),
+        ...via.look.map(p => new THREE.Vector3(p[0], p[1], p[2])),
+        new THREE.Vector3(...CAM_STATES[i+1].look)];
+      SEGMENT_CURVES.push({
+        pos: new THREE.CatmullRomCurve3(pts, false, 'catmullrom', 0.5),
+        look: new THREE.CatmullRomCurve3(lks, false, 'catmullrom', 0.5),
+      });
+    } else {
+      SEGMENT_CURVES.push(null);
+    }
+  }
+  const _tmpPos = new THREE.Vector3();
+  const _tmpLook = new THREE.Vector3();
+  function sampleCamera(frac, outPos, outLook){
+    const clamped = Math.max(0, Math.min(STATES_COUNT - 1, frac));
+    const i = Math.min(STATES_COUNT - 2, Math.floor(clamped));
+    const f = Math.max(0, Math.min(1, clamped - i));
+    const seg = SEGMENT_CURVES[i];
+    if(seg){
+      // Strict 1:1 scroll→curve mapping (no easing) so scrolling slow/fast
+      // yields a perfectly linear response and the via-arc tracks scroll.
+      outPos.copy(seg.pos.getPointAt(f));
+      outLook.copy(seg.look.getPointAt(f));
+    } else {
+      const a = CAM_STATES[i], b = CAM_STATES[i+1];
+      outPos.set(a.pos[0] + (b.pos[0]-a.pos[0]) * f,
+                 a.pos[1] + (b.pos[1]-a.pos[1]) * f,
+                 a.pos[2] + (b.pos[2]-a.pos[2]) * f);
+      outLook.set(a.look[0] + (b.look[0]-a.look[0]) * f,
+                  a.look[1] + (b.look[1]-a.look[1]) * f,
+                  a.look[2] + (b.look[2]-a.look[2]) * f);
+    }
+  }
+
+  /* Mouse parallax */
+  let mx = 0, my = 0, tmx = 0, tmy = 0;
+  window.addEventListener('pointermove', (e) => {
+    tmx = (e.clientX / window.innerWidth - 0.5) * 2;
+    tmy = (e.clientY / window.innerHeight - 0.5) * 2;
+  }, {passive: true});
+
+  /* ---------------- RENDER LOOP ---------------- */
+  const clock = new THREE.Clock();
+  let firstFrame = false;
+  const posPart = particles.geometry.attributes.position.array;
+  const velPart = particles.geometry.attributes.vel.array;
+  const PART_RANGE = 260;
+
+  function render(){
+    const dt = Math.min(clock.getDelta(), 0.05);
+    const t = clock.getElapsedTime();
+
+    // Drive the page scroll ourselves on wheel events so the animation
+    // interpolates smoothly between notches instead of jumping per-tick.
+    smoothScrollTick(dt);
+    // Read the live scroll position every frame so camera tracks the page
+    // 1:1 without waiting on the 'scroll' event — removes input→camera lag.
+    const _segH = getSegHeight();
+    fracState = Math.max(0, Math.min(STATES_COUNT - 1, window.scrollY / _segH));
+    sampleCamera(fracState, camCurPos, camCurLook);
+
+    // Mouse parallax
+    mx += (tmx - mx) * 0.05;
+    my += (tmy - my) * 0.05;
+
+    camera.position.copy(camCurPos);
+    camera.position.x += mx * 1.8;
+    camera.position.y -= my * 1.2;
+
+    // Portrait-mode framing adjustments
+    const isPortrait = window.innerHeight > window.innerWidth;
+    if(isPortrait && currentState >= 1 && currentState <= 3){
+      // Pull camera further out on phones so the building doesn't crowd overlaid text
+      const radialPull = 1.22;
+      camera.position.x *= radialPull;
+      camera.position.z *= radialPull;
+      camera.position.y = camCurPos.y * 1.08;
+    }
+    camera.lookAt(camCurLook);
+
+    // Particle drift (upward + recycle)
+    for(let i = 0; i < velPart.length; i++){
+      const iy = i*3 + 1;
+      posPart[iy] += velPart[i] * dt * 1.8;
+      // gentle horizontal drift via sine
+      posPart[i*3] += Math.sin(t * 0.4 + i * 0.3) * 0.04;
+      if(posPart[iy] > 55){
+        posPart[iy] = 0.5;
+        posPart[i*3]   = (Math.random() - 0.5) * PART_RANGE;
+        posPart[i*3+2] = (Math.random() - 0.5) * PART_RANGE;
+      }
+    }
+    particles.geometry.attributes.position.needsUpdate = true;
+    particles.material.uniforms.uTime.value = t;
+
+    // Pedestal animations
+    pedestals.forEach((p, i) => {
+      const phase = t + i * 1.2;
+      p.disc.material.emissiveIntensity = 1.0 + 0.35 * Math.sin(phase * 1.3);
+      p.ring.material.opacity = 0.28 + 0.12 * Math.sin(phase * 1.0);
+      p.beam.material.uniforms.uTime.value = t;
+      p.light.intensity = 1.3 + 0.5 * Math.sin(phase * 1.4);
+    });
+
+    // Dynamically align pedCardStage to the active 3D pedestal
+    if(pedCardStage.classList.contains('visible') && currentState >= 4 && currentState <= 8) {
+      const pIdx = currentState - 4;
+      if(PEDESTAL_POS[pIdx]) {
+        const pos = PEDESTAL_POS[pIdx].clone();
+        pos.y = 7.0; // Perfect vertical alignment for cards
+        pos.project(camera);
+        const x = (pos.x * 0.5 + 0.5) * window.innerWidth;
+        const y = (-pos.y * 0.5 + 0.5) * window.innerHeight;
+        pedCardStage.style.left = x + 'px';
+        pedCardStage.style.top = y + 'px';
+        pedArrows.style.left = x + 'px';
+        pedArrows.style.top = y + 'px';
+      }
+    }
+
+    // Liquid mouse logic
+    currentMouse.lerp(targetMouse, 0.15);
+    const vel = targetMouse.distanceTo(currentMouse);
+    mouseSpeed += (vel * 10.0 - mouseSpeed) * 0.1;
+    liquidShader.uniforms.uMouse.value.copy(currentMouse);
+    liquidShader.uniforms.uVelocity.value = mouseSpeed;
+    liquidShader.uniforms.uTime.value = t;
+
+    // Render original scene to target
+    renderer.setRenderTarget(renderTarget);
+    renderer.render(scene, camera);
+    
+    // Render target to screen using liquid shader
+    renderer.setRenderTarget(null);
+    renderer.render(orthoScene, orthoCamera);
+
+    if(!firstFrame){
+      firstFrame = true;
+      setTimeout(hideLoading, 500);
+    }
+
+    requestAnimationFrame(render);
+  }
+
+  if(!prefersReduced){
+    requestAnimationFrame(render);
+  } else {
+    sampleCamera(0, camCurPos, camCurLook);
+    camera.position.copy(camCurPos);
+    camera.lookAt(camCurLook);
+    renderer.setRenderTarget(renderTarget);
+    renderer.render(scene, camera);
+    renderer.setRenderTarget(null);
+    renderer.render(orthoScene, orthoCamera);
+    hideLoading();
+  }
+})();
+
+/* ============================================================
+   LOADING SCREEN
+   ============================================================ */
+function hideLoading(){
+  const ls = document.getElementById('loadingScreen');
+  if(ls){ ls.classList.add('hidden'); setTimeout(() => ls.remove(), 900); }
+}
+/* Progress animation */
+(function(){
+  const pctEl = document.getElementById('loadingPct');
+  if(!pctEl) return;
+  let pct = 0;
+  const tick = () => {
+    const ls = document.getElementById('loadingScreen');
+    const target = (ls && ls.classList.contains('hidden')) ? 100 : 96;
+    pct += (target - pct) * 0.07;
+    pctEl.textContent = Math.round(pct) + '%';
+    if(pct < 99.9) requestAnimationFrame(tick);
+    else pctEl.textContent = '100%';
+  };
+  tick();
+})();
+/* Safety: force hide after 7s if Three.js hangs */
+setTimeout(() => hideLoading(), 7000);
+
+/* Init state 0 and sync scroll-driven state */
+// Some browsers restore scroll position on reload; pull it back to the top
+// so the site always starts at state 0.
+if('scrollRestoration' in history) history.scrollRestoration = 'manual';
+window.scrollTo(0, 0);
+onScroll();
+
+
+    // Override Three.js camera scroll update to use continuous scroll
+    lenis.on('scroll', ({ scroll, limit }) => {
+      // Map global scroll [0, limit] to fracState [0, STATES_COUNT-1]
+      fracState = (scroll / limit) * (STATES_COUNT - 1);
+      if(window.liquidShader) {
+         window.liquidShader.uniforms.uVelocity.value = 1.0;
+      }
+    });
+
+  </script>
+</body>
+</html>
