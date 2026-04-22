@@ -353,8 +353,9 @@ header > *{pointer-events:auto}
   width:600px;height:600px;margin-top:-300px;margin-left:-300px;
   opacity:0;transition:opacity .5s ease;
   perspective:1800px;will-change:left,top;
+  pointer-events:none;
 }
-.ped-card-stage.visible{opacity:1}
+.ped-card-stage.visible{opacity:1;pointer-events:auto;}
 .ped-card-stack{
   position:absolute;left:300px;top:300px;width:0;height:0;
   transform-style:preserve-3d;
@@ -1192,8 +1193,6 @@ body.modal-open{overflow:hidden}
   </div>
 </div>
 
-<script src="https://unpkg.com/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
-<script src="https://unpkg.com/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
 <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
 <script>
 /* ============================================================
@@ -1442,19 +1441,16 @@ function onScroll(){
 window.addEventListener('scroll', onScroll, {passive:true});
 window.addEventListener('resize', onScroll, {passive:true});
 
-/* ---------------- SMOOTH WHEEL SCROLL ----------------
-   Using Lenis for ultra-smooth Vertex3D-level inertia scrolling. */
-const lenis = new Lenis({
-  duration: 1.2,
-  easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-  smoothWheel: true,
-  smoothTouch: false
-});
-function raf(time) {
-  lenis.raf(time);
-  requestAnimationFrame(raf);
+/* ---------------- SMOOTH WHEEL SCROLL + AUTO-SNAP ----------------
+   Custom physics scroll that feels smooth, but automatically 
+   snaps to the exact state boundary when scrolling stops. */
+let scrollTargetY = 0;
+let scrollSmoothActive = false;
+let scrollSnapTimer = null;
+
+function maxScrollY(){
+  return Math.max(0, (document.documentElement.scrollHeight || document.body.scrollHeight) - window.innerHeight);
 }
-requestAnimationFrame(raf);
 
 function anyModalOpen(){
   return document.getElementById('detailModal').classList.contains('open')
@@ -1462,15 +1458,54 @@ function anyModalOpen(){
       || document.getElementById('imageModal').classList.contains('open');
 }
 
-// Pause Lenis when modal is open
-lenis.on('scroll', () => {
-  if (anyModalOpen()) lenis.stop();
-  else lenis.start();
-});
+window.addEventListener('wheel', (e) => {
+  if(anyModalOpen()) return;
+  e.preventDefault();
+  
+  if(!scrollSmoothActive) {
+    scrollTargetY = window.scrollY;
+  }
+  
+  // Apply scroll delta
+  let dy = e.deltaY;
+  if(e.deltaMode === 1) dy *= 16;
+  else if(e.deltaMode === 2) dy *= window.innerHeight;
+  
+  scrollTargetY = Math.max(0, Math.min(maxScrollY(), scrollTargetY + dy));
+  scrollSmoothActive = true;
+  
+  // Debounce the snap logic
+  clearTimeout(scrollSnapTimer);
+  scrollSnapTimer = setTimeout(() => {
+    // User stopped scrolling. Find nearest state and snap!
+    const seg = getSegHeight();
+    const nearestState = Math.round(scrollTargetY / seg);
+    scrollTargetY = Math.max(0, Math.min(maxScrollY(), nearestState * seg));
+  }, 350);
+  
+}, {passive:false});
 
-let scrollSmoothActive = true;
+window.addEventListener('touchstart', () => {
+  // Hand control back to native scrolling / CSS scroll-snap
+  scrollSmoothActive = false;
+  clearTimeout(scrollSnapTimer);
+}, {passive:true});
+
 function smoothScrollTick(dt) {
-  // handled by Lenis via requestAnimationFrame
+  if(!scrollSmoothActive) return;
+  const cur = window.scrollY;
+  const delta = scrollTargetY - cur;
+  
+  if(Math.abs(delta) < 0.5){
+    if(cur !== scrollTargetY) window.scrollTo(0, scrollTargetY);
+    scrollSmoothActive = false;
+    return;
+  }
+  
+  // Exponential decay smoothing (feels like Lenis inertia)
+  // A time constant of 0.15 gives a crisp, responsive feel.
+  const k = 1 - Math.exp(-dt / 0.15);
+  window.scrollTo(0, cur + delta * k);
 }
 
 /* ---------------- SCRUBBER (native-style draggable scrollbar) ---------------- */
