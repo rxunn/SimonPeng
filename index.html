@@ -2007,19 +2007,13 @@ document.addEventListener('keydown', (e) => {
       uniform sampler2D tDiffuse; uniform vec2 uMouse; uniform float uVelocity;
       uniform float uTime; uniform float uAspect; varying vec2 vUv;
       
-      vec4 LinearTosRGB( in vec4 value ) {
-        vec3 rgb = max(value.rgb, vec3(0.0));
-        vec3 higher = pow(rgb, vec3(0.41666)) * 1.055 - vec3(0.055);
-        vec3 lower = rgb * 12.92;
-        return vec4(mix(lower, higher, step(vec3(0.0031308), rgb)), value.a);
-      }
-      
       void main() {
         vec2 uv = vUv; vec2 p = uv - uMouse; p.x *= uAspect;
         float dist = length(p);
         float ripple = sin(dist * 50.0 - uTime * 15.0) * exp(-dist * 8.0) * uVelocity * 0.05;
         vec4 color = texture2D(tDiffuse, uv + normalize(p) * ripple);
-        gl_FragColor = LinearTosRGB(color);
+        gl_FragColor = color;
+        #include <colorspace_fragment>
       }
     `,
     blending: THREE.NoBlending
